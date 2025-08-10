@@ -1,9 +1,106 @@
 import { Link } from "wouter";
 import { useGameProgress } from "@/hooks/use-game-progress";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
   const { data: progress } = useGameProgress();
+  const { isAuthenticated } = useAuth();
 
+  if (!isAuthenticated) {
+    return (
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        {/* Welcome Section for Unauthenticated Users */}
+        <section className="text-center mb-12">
+          <div className="wave-bg rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
+            {/* Floating elements */}
+            <div className="absolute top-4 left-4 text-4xl animate-float opacity-70">🐠</div>
+            <div className="absolute top-8 right-8 text-3xl animate-bubble opacity-60">🫧</div>
+            <div className="absolute bottom-4 left-1/4 text-3xl animate-float opacity-50" style={{animationDelay: '1s'}}>🌊</div>
+            
+            <div className="relative z-10">
+              <h2 className="text-4xl md:text-6xl font-fredoka mb-4">Welcome to Crabby Crew!</h2>
+              <p className="text-xl md:text-2xl opacity-90 mb-6">Your Ocean Learning Adventure Awaits</p>
+              
+              <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 max-w-2xl mx-auto">
+                <p className="text-lg mb-6">Dive into the fascinating world of crabs and ocean life!</p>
+                <Link href="/login">
+                  <button className="bg-white text-ocean-600 font-bold px-8 py-4 rounded-2xl text-xl hover:bg-ocean-50 transform hover:scale-105 transition-all duration-200">
+                    Start Your Adventure! 🦀
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Feature Preview Cards */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {/* Learn Card */}
+          <div className="bg-white rounded-3xl shadow-xl border-4 border-ocean-100 opacity-75">
+            <div className="p-6 text-center">
+              <div className="text-6xl mb-4">🦀</div>
+              <h3 className="text-2xl font-bold text-ocean-600 mb-2">Learn</h3>
+              <p className="text-gray-600 mb-4">Discover amazing crab species and their secrets!</p>
+              <div className="bg-ocean-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                6 Species to Explore
+              </div>
+            </div>
+          </div>
+
+          {/* Quests Card */}
+          <div className="bg-white rounded-3xl shadow-xl border-4 border-coral-100 opacity-75">
+            <div className="p-6 text-center">
+              <div className="text-6xl mb-4">🎯</div>
+              <h3 className="text-2xl font-bold text-coral-600 mb-2">Quests</h3>
+              <p className="text-gray-600 mb-4">Test your knowledge with fun quizzes!</p>
+              <div className="bg-coral-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                3 Quiz Categories
+              </div>
+            </div>
+          </div>
+
+          {/* Rewards Card */}
+          <div className="bg-white rounded-3xl shadow-xl border-4 border-sunny-100 opacity-75">
+            <div className="p-6 text-center">
+              <div className="text-6xl mb-4">🏆</div>
+              <h3 className="text-2xl font-bold text-sunny-600 mb-2">Rewards</h3>
+              <p className="text-gray-600 mb-4">Earn badges and achievements!</p>
+              <div className="bg-sunny-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                Unlock Badges
+              </div>
+            </div>
+          </div>
+
+          {/* Leaderboards Card */}
+          <div className="bg-white rounded-3xl shadow-xl border-4 border-purple-100 opacity-75">
+            <div className="p-6 text-center">
+              <div className="text-6xl mb-4">👑</div>
+              <h3 className="text-2xl font-bold text-purple-600 mb-2">Leaderboards</h3>
+              <p className="text-gray-600 mb-4">Compete with other ocean explorers!</p>
+              <div className="bg-purple-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                Community Rankings
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Call to Action */}
+        <section className="text-center">
+          <div className="bg-gradient-to-r from-ocean-500 to-ocean-600 rounded-3xl p-8 text-white shadow-2xl">
+            <h3 className="text-3xl font-bold mb-4">Ready to Dive In?</h3>
+            <p className="text-xl mb-6 opacity-90">Join thousands of ocean explorers learning about amazing sea creatures!</p>
+            <Link href="/login">
+              <button className="bg-white text-ocean-600 font-bold px-8 py-4 rounded-2xl text-xl hover:bg-ocean-50 transform hover:scale-105 transition-all duration-200">
+                Begin Your Journey! 🌊
+              </button>
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  // Original content for authenticated users
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
       {/* Welcome Section */}

@@ -13,11 +13,13 @@ import Rewards from "@/pages/rewards";
 import Videos from "@/pages/videos";
 import Leaderboards from "@/pages/leaderboards";
 import Profile from "@/pages/profile";
+import Login from "@/pages/login";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
       <Route path="/learn" component={Learn} />
       <Route path="/quests" component={Quests} />
       <Route path="/rewards" component={Rewards} />
