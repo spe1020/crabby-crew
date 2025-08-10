@@ -12,6 +12,7 @@ interface CrabLearningModalProps {
     name: string;
     scientificName: string;
     habitat: string;
+    region: string;
     diet: string;
     size: string;
     funFact: string;
@@ -40,11 +41,11 @@ export default function CrabLearningModal({ crab, isOpen, onClose, isAlreadyLear
       queryClient.invalidateQueries({ queryKey: ['/api/progress', userId] });
       setShowSuccess(true);
       
-      // Auto-close success message after 3 seconds
+      // Auto-close success message after 2 seconds
       setTimeout(() => {
         setShowSuccess(false);
         onClose();
-      }, 3000);
+      }, 2000);
     },
     onError: (error: any) => {
       toast({
@@ -78,7 +79,6 @@ export default function CrabLearningModal({ crab, isOpen, onClose, isAlreadyLear
               <div className="text-3xl font-bold text-green-600">+25 XP</div>
               <div className="text-sm text-green-700">Species learned!</div>
             </div>
-            <p className="text-sm text-gray-500 mt-4">Closing automatically...</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -87,7 +87,7 @@ export default function CrabLearningModal({ crab, isOpen, onClose, isAlreadyLear
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-ocean-600">
             {crab.name}
@@ -100,6 +100,36 @@ export default function CrabLearningModal({ crab, isOpen, onClose, isAlreadyLear
             <div className="text-8xl mb-4">{crab.image}</div>
             <h3 className="text-2xl font-semibold text-gray-800">{crab.name}</h3>
             <p className="text-lg text-gray-600 italic">{crab.scientificName}</p>
+          </div>
+
+          {/* Region Map Section */}
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl p-6 border-4 border-blue-200">
+            <div className="text-center mb-4">
+              <div className="text-4xl mb-2">🌍</div>
+              <h4 className="text-xl font-bold text-blue-700">Where in the world?</h4>
+            </div>
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="text-center mb-3">
+                <p className="text-lg font-semibold text-gray-800 mb-2">{crab.region}</p>
+                <p className="text-sm text-gray-600">{crab.habitat}</p>
+              </div>
+              
+              {/* Simple World Map with Star */}
+              <div className="relative w-full h-32 bg-gradient-to-b from-blue-200 to-blue-300 rounded-xl overflow-hidden">
+                {/* Continents (simplified shapes) */}
+                <div className="absolute top-4 left-4 w-16 h-8 bg-green-400 rounded-full opacity-60"></div>
+                <div className="absolute top-8 right-8 w-20 h-10 bg-green-400 rounded-full opacity-60"></div>
+                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-24 h-12 bg-green-400 rounded-full opacity-60"></div>
+                
+                {/* Star indicating region */}
+                <div className="absolute text-2xl animate-pulse" style={{
+                  top: getRegionStarPosition(crab.region).top,
+                  left: getRegionStarPosition(crab.region).left
+                }}>
+                  ⭐
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Fact Cards */}
@@ -172,4 +202,24 @@ export default function CrabLearningModal({ crab, isOpen, onClose, isAlreadyLear
       </DialogContent>
     </Dialog>
   );
+}
+
+// Helper function to position the star on the map based on region
+function getRegionStarPosition(region: string): { top: string; left: string } {
+  if (region.includes("North America") || region.includes("Atlantic Coast")) {
+    return { top: "20%", left: "25%" };
+  } else if (region.includes("Pacific") || region.includes("Japan")) {
+    return { top: "25%", left: "75%" };
+  } else if (region.includes("Caribbean") || region.includes("Central America")) {
+    return { top: "45%", left: "30%" };
+  } else if (region.includes("Tropical") || region.includes("Subtropical")) {
+    return { top: "60%", left: "50%" };
+  } else if (region.includes("Arctic") || region.includes("North Atlantic")) {
+    return { top: "10%", left: "50%" };
+  } else if (region.includes("Indian") || region.includes("Indo-Pacific")) {
+    return { top: "55%", left: "70%" };
+  } else {
+    // Default position
+    return { top: "50%", left: "50%" };
+  }
 }

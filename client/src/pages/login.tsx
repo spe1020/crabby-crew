@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { queryClient } from "@/lib/queryClient";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -36,13 +37,18 @@ export default function Login() {
       if (response.ok) {
         const data = await response.json();
         console.log("Login successful:", data);
-        // Refresh the page to update auth state
-        window.location.href = "/";
+        
+        // Invalidate and refetch the auth query to update the UI
+        await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        
+        // Redirect to home page
+        setLocation("/");
       } else {
         const errorData = await response.json();
         setError(errorData.message || "Login failed");
       }
     } catch (err) {
+      console.error("Login error:", err);
       setError("Network error. Please try again.");
     } finally {
       setIsLoading(false);

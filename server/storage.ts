@@ -129,6 +129,7 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const progress: GameProgress = {
       id,
+      userId: insertProgress.userId || null,
       totalXp: 0,
       currentStreak: 0,
       longestStreak: 0,
@@ -136,6 +137,8 @@ export class MemStorage implements IStorage {
       badges: [] as string[],
       completedQuizzes: [] as string[],
       learnedSpecies: [] as string[],
+      watchedVideos: [] as string[],
+      flippedCrabs: [] as string[],
       lastActivityDate: null,
       difficultyLevel: 1,
       ...insertProgress,
@@ -247,6 +250,8 @@ export class MemStorage implements IStorage {
         badges: ["first-steps", "species-collector"],
         completedQuizzes: ["hermit-crab", "blue-crab"],
         learnedSpecies: Array.from({length: userData.learnedSpecies}, (_, i) => `species-${i}`),
+        watchedVideos: [],
+        flippedCrabs: [],
         lastActivityDate: new Date().toISOString().split('T')[0],
         difficultyLevel: 1
       };

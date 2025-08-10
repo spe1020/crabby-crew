@@ -6,6 +6,8 @@ export default function Navigation() {
   const { data: progress } = useGameProgress();
   const { user, isAuthenticated } = useAuth();
 
+
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", {

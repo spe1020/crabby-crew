@@ -24,6 +24,8 @@ export const gameProgress = pgTable("game_progress", {
   badges: jsonb("badges").$type<string[]>().notNull().default([]),
   completedQuizzes: jsonb("completed_quizzes").$type<string[]>().notNull().default([]),
   learnedSpecies: jsonb("learned_species").$type<string[]>().notNull().default([]),
+  watchedVideos: jsonb("watched_videos").$type<string[]>().notNull().default([]),
+  flippedCrabs: jsonb("flipped_crabs").$type<string[]>().notNull().default([]),
   lastActivityDate: text("last_activity_date"),
   difficultyLevel: integer("difficulty_level").notNull().default(1),
 });

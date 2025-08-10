@@ -8,17 +8,29 @@ import session from "express-session";
 const activeUsers = new Map<string, string>(); // sessionId -> userId
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Simple session middleware
+  // Improved session middleware
   app.use(session({
-    secret: 'crabby-crew-secret',
+    secret: process.env.SESSION_SECRET || 'crabby-crew-secret-key-change-in-production',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+    cookie: { 
+      secure: false, // Set to true in production with HTTPS
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax'
+    },
+    name: 'crabby-crew-session'
   }));
+
+  // Health check endpoint
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', message: 'Crabby Crew API is running', timestamp: new Date().toISOString() });
+  });
 
   // Auth routes
   app.post('/api/auth/login', async (req, res) => {
     try {
+      console.log("Login attempt:", req.body);
       const { username, createNew } = req.body;
       
       if (!username || username.length < 3) {
@@ -26,6 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       let user = await storage.getUserByUsername(username);
+      console.log("Existing user found:", !!user);
       
       if (!user && createNew) {
         // Create new user
@@ -34,6 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           displayName: username,
           avatarEmoji: "🦀"
         });
+        console.log("New user created:", user.id);
       } else if (!user) {
         return res.status(404).json({ message: "User not found. Try creating a new account." });
       }
@@ -41,6 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set session
       (req.session as any).userId = user.id;
       activeUsers.set(req.sessionID, user.id);
+      console.log("Session set for user:", user.id, "Session ID:", req.sessionID);
       
       // Update user online status
       await storage.updateUser(user.id, { isOnline: true, lastSeen: new Date() });
@@ -54,7 +69,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/auth/user', async (req, res) => {
     try {
+      console.log("Auth check - Session ID:", req.sessionID);
+      console.log("Auth check - Session data:", req.session);
       const userId = (req.session as any)?.userId;
+      console.log("Auth check - User ID from session:", userId);
+      
       if (!userId) {
         return res.status(401).json({ message: "Not authenticated" });
       }
@@ -115,7 +134,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Game progress routes
   app.get("/api/progress/:userId", async (req, res) => {
     try {
+      // Check if user is authenticated
+      const sessionUserId = (req.session as any)?.userId;
+      if (!sessionUserId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
       const { userId } = req.params;
+      
+      // Ensure the user can only access their own progress
+      if (sessionUserId !== userId) {
+        return res.status(403).json({ message: "Not authorized to access this progress" });
+      }
+      
       let progress = await storage.getGameProgress(userId);
       
       // If progress doesn't exist, create it
@@ -142,7 +173,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/progress/:userId", async (req, res) => {
     try {
+      // Check if user is authenticated
+      const sessionUserId = (req.session as any)?.userId;
+      if (!sessionUserId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
       const { userId } = req.params;
+      
+      // Ensure the user can only update their own progress
+      if (sessionUserId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this progress" });
+      }
+      
       const updates = req.body;
       
       const progress = await storage.updateGameProgress(userId, updates);
@@ -338,6 +381,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(progress);
     } catch (error) {
       res.status(500).json({ message: "Failed to update learned species" });
+    }
+  });
+
+  // Mark video as complete and award XP
+  app.post("/api/video-complete", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { videoId } = req.body;
+      if (!videoId) {
+        return res.status(400).json({ message: "Video ID is required" });
+      }
+
+      // Get current progress
+      let progress = await storage.getGameProgress(userId);
+      if (!progress) {
+        // Create new progress if none exists
+        progress = await storage.createGameProgress({
+          userId,
+          totalXp: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          level: 1,
+          badges: [],
+          completedQuizzes: [],
+          learnedSpecies: [],
+          watchedVideos: [],
+          lastActivityDate: null,
+          difficultyLevel: 1
+        });
+      }
+
+      // Check if video already completed
+      if (progress.watchedVideos && progress.watchedVideos.includes(videoId)) {
+        return res.status(400).json({ message: "Video already completed" });
+      }
+
+      // Add video to watched list and award XP
+      const watchedVideos = [...(progress.watchedVideos || []), videoId];
+      const newXp = progress.totalXp + 50; // Award 50 XP for video completion
+
+      const updatedProgress = await storage.updateGameProgress(userId, {
+        watchedVideos,
+        totalXp: newXp,
+        lastActivityDate: new Date().toISOString()
+      });
+
+      // Update leaderboards
+      await storage.updateLeaderboard({
+        userId,
+        category: "total_xp",
+        score: newXp
+      });
+
+      res.json({
+        message: "Video marked as complete",
+        progress: updatedProgress,
+        xpEarned: 50
+      });
+    } catch (error) {
+      console.error("Video completion error:", error);
+      res.status(500).json({ message: "Failed to mark video as complete" });
+    }
+  });
+
+  // Mark crab as flipped and award XP
+  app.post("/api/crab-flipped", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { crabId } = req.body;
+      if (!crabId) {
+        return res.status(400).json({ message: "Crab ID is required" });
+      }
+
+      // Get current progress
+      let progress = await storage.getGameProgress(userId);
+      if (!progress) {
+        // Create new progress if none exists
+        progress = await storage.createGameProgress({
+          userId,
+          totalXp: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          level: 1,
+          badges: [],
+          completedQuizzes: [],
+          learnedSpecies: [],
+          watchedVideos: [],
+          lastActivityDate: null,
+          difficultyLevel: 1
+        });
+      }
+
+      // Check if crab already flipped to prevent duplicate XP
+      if (progress.flippedCrabs && progress.flippedCrabs.includes(crabId)) {
+        return res.json({
+          message: "Crab already discovered",
+          progress: progress,
+          xpEarned: 0
+        });
+      }
+
+      // Award XP for first-time discovery
+      const newXp = progress.totalXp + 25;
+      const updatedFlippedCrabs = [...(progress.flippedCrabs || []), crabId];
+
+      const updatedProgress = await storage.updateGameProgress(userId, {
+        totalXp: newXp,
+        flippedCrabs: updatedFlippedCrabs,
+        lastActivityDate: new Date().toISOString()
+      });
+
+      // Update leaderboards
+      await storage.updateLeaderboard({
+        userId,
+        category: "total_xp",
+        score: newXp
+      });
+
+      res.json({
+        message: "Crab discovery recorded",
+        progress: updatedProgress,
+        xpEarned: 25
+      });
+    } catch (error) {
+      console.error("Crab flip error:", error);
+      res.status(500).json({ message: "Failed to record crab discovery" });
     }
   });
 

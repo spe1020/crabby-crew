@@ -42,7 +42,7 @@ export default function Home() {
               <h3 className="text-2xl font-bold text-ocean-600 mb-2">Learn</h3>
               <p className="text-gray-600 mb-4">Discover amazing crab species and their secrets!</p>
               <div className="bg-ocean-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                6 Species to Explore
+                16 Species to Explore
               </div>
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function Home() {
               <h3 className="text-2xl font-bold text-ocean-600 mb-2">Learn</h3>
               <p className="text-gray-600 mb-4">Discover amazing crab species and their secrets!</p>
               <div className="bg-ocean-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                6 Species to Explore
+                16 Species to Explore
               </div>
             </div>
           </div>
