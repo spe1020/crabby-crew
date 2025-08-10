@@ -21,12 +21,13 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
-    proxy: {
+    // Only proxy in development when running the full server
+    proxy: process.env.NODE_ENV === 'development' ? {
       "/api": {
         target: "http://localhost:3001",
         changeOrigin: true,
         secure: false,
       },
-    },
+    } : undefined,
   },
 });
