@@ -1,0 +1,218 @@
+[
+  {
+    "id": "crab-basics",
+    "title": "Crab Basics",
+    "description": "Test your knowledge about different crab species",
+    "difficulty": 1,
+    "xpReward": 50,
+    "questions": [
+      {
+        "id": "q1",
+        "question": "Which crab species is known for carrying shells on its back?",
+        "options": [
+          {"id": "a", "text": "Blue Crab"},
+          {"id": "b", "text": "Hermit Crab"},
+          {"id": "c", "text": "King Crab"},
+          {"id": "d", "text": "Ghost Crab"}
+        ],
+        "correctAnswer": "b",
+        "explanation": "Hermit crabs carry empty shells to protect their soft bodies!"
+      },
+      {
+        "id": "q2",
+        "question": "What makes fiddler crabs special?",
+        "options": [
+          {"id": "a", "text": "They can swim backwards"},
+          {"id": "b", "text": "They change colors"},
+          {"id": "c", "text": "Males have one giant claw"},
+          {"id": "d", "text": "They live in trees"}
+        ],
+        "correctAnswer": "c",
+        "explanation": "Male fiddler crabs have one oversized claw that they wave to communicate!"
+      },
+      {
+        "id": "q3",
+        "question": "Which crab is the fastest runner?",
+        "options": [
+          {"id": "a", "text": "Ghost Crab"},
+          {"id": "b", "text": "Shore Crab"},
+          {"id": "c", "text": "Blue Crab"},
+          {"id": "d", "text": "King Crab"}
+        ],
+        "correctAnswer": "a",
+        "explanation": "Ghost crabs can run up to 10 mph on the beach!"
+      },
+      {
+        "id": "q4",
+        "question": "What is special about pea crabs?",
+        "options": [
+          {"id": "a", "text": "They are the largest crabs"},
+          {"id": "b", "text": "They live inside oysters"},
+          {"id": "c", "text": "They can fly"},
+          {"id": "d", "text": "They change colors"}
+        ],
+        "correctAnswer": "b",
+        "explanation": "Pea crabs are tiny hitchhikers that live inside oysters and mussels!"
+      }
+    ]
+  },
+  {
+    "id": "ocean-explorer",
+    "title": "Ocean Explorer",
+    "description": "Learn about different ocean habitats",
+    "difficulty": 2,
+    "xpReward": 75,
+    "questions": [
+      {
+        "id": "q1",
+        "question": "Where do king crabs live?",
+        "options": [
+          {"id": "a", "text": "Shallow warm waters"},
+          {"id": "b", "text": "Cold deep waters"},
+          {"id": "c", "text": "Tide pools"},
+          {"id": "d", "text": "Coral reefs"}
+        ],
+        "correctAnswer": "b",
+        "explanation": "King crabs live in cold, deep ocean waters where it's dark and chilly!"
+      },
+      {
+        "id": "q2",
+        "question": "What habitat do shore crabs prefer?",
+        "options": [
+          {"id": "a", "text": "Open ocean"},
+          {"id": "b", "text": "Deep sea trenches"},
+          {"id": "c", "text": "Rocky tide pools"},
+          {"id": "d", "text": "Sandy beaches"}
+        ],
+        "correctAnswer": "c",
+        "explanation": "Shore crabs love rocky tide pools where they can hide under stones!"
+      },
+      {
+        "id": "q3",
+        "question": "Where can you find mangrove crabs?",
+        "options": [
+          {"id": "a", "text": "Deep ocean"},
+          {"id": "b", "text": "Mangrove forests"},
+          {"id": "c", "text": "Arctic waters"},
+          {"id": "d", "text": "Coral reefs"}
+        ],
+        "correctAnswer": "b",
+        "explanation": "Mangrove crabs live in mangrove forests and can climb trees up to 6 feet high!"
+      },
+      {
+        "id": "q4",
+        "question": "What makes snow crabs special?",
+        "options": [
+          {"id": "a", "text": "They can fly"},
+          {"id": "b", "text": "They change colors"},
+          {"id": "c", "text": "They survive freezing water"},
+          {"id": "d", "text": "They glow in the dark"}
+        ],
+        "correctAnswer": "c",
+        "explanation": "Snow crabs have special proteins that prevent their blood from freezing in Arctic waters!"
+      }
+    ]
+  },
+  {
+    "id": "crab-anatomy",
+    "title": "Crab Anatomy",
+    "description": "Match crab body parts with their names",
+    "difficulty": 3,
+    "xpReward": 100,
+    "questions": [
+      {
+        "id": "q1",
+        "question": "What do crabs use their claws for?",
+        "options": [
+          {"id": "a", "text": "Only for walking"},
+          {"id": "b", "text": "Catching food and defense"},
+          {"id": "c", "text": "Swimming only"},
+          {"id": "d", "text": "Breathing"}
+        ],
+        "correctAnswer": "b",
+        "explanation": "Crabs use their claws to catch food, defend themselves, and communicate!"
+      },
+      {
+        "id": "q2",
+        "question": "How many legs do crabs have?",
+        "options": [
+          {"id": "a", "text": "6 legs"},
+          {"id": "b", "text": "8 legs"},
+          {"id": "c", "text": "10 legs"},
+          {"id": "d", "text": "12 legs"}
+        ],
+        "correctAnswer": "c",
+        "explanation": "Crabs have 10 legs total - 8 walking legs plus 2 claws!"
+      },
+      {
+        "id": "q3",
+        "question": "What makes spider crabs unique?",
+        "options": [
+          {"id": "a", "text": "They can fly"},
+          {"id": "b", "text": "They have the longest legs"},
+          {"id": "c", "text": "They change colors"},
+          {"id": "d", "text": "They glow in the dark"}
+        ],
+        "correctAnswer": "b",
+        "explanation": "Spider crabs have the longest legs of any crab, with some spanning up to 12 feet across!"
+      }
+    ]
+  },
+  {
+    "id": "amazing-crabs",
+    "title": "Amazing Crabs",
+    "description": "Discover the most fascinating crab behaviors and adaptations",
+    "difficulty": 3,
+    "xpReward": 125,
+    "questions": [
+      {
+        "id": "q1",
+        "question": "What makes horseshoe crabs special?",
+        "options": [
+          {"id": "a", "text": "They can fly"},
+          {"id": "b", "text": "They are living fossils"},
+          {"id": "c", "text": "They change colors"},
+          {"id": "d", "text": "They glow in the dark"}
+        ],
+        "correctAnswer": "b",
+        "explanation": "Horseshoe crabs are living fossils that have been around for 450 million years - older than dinosaurs!"
+      },
+      {
+        "id": "q2",
+        "question": "What do decorator crabs do?",
+        "options": [
+          {"id": "a", "text": "They paint their shells"},
+          {"id": "b", "text": "They attach seaweeds for camouflage"},
+          {"id": "c", "text": "They build houses"},
+          {"id": "d", "text": "They sing songs"}
+        ],
+        "correctAnswer": "b",
+        "explanation": "Decorator crabs are fashionistas that attach seaweeds and sponges to their shells for camouflage!"
+      },
+      {
+        "id": "q3",
+        "question": "What makes boxer crabs unique?",
+        "options": [
+          {"id": "a", "text": "They can box with their claws"},
+          {"id": "b", "text": "They hold sea anemones as weapons"},
+          {"id": "c", "text": "They wear boxing gloves"},
+          {"id": "d", "text": "They can fly"}
+        ],
+        "correctAnswer": "b",
+        "explanation": "Boxer crabs hold sea anemones in their claws like boxing gloves for defense - they're martial artists!"
+      },
+      {
+        "id": "q4",
+        "question": "What can coconut crabs do?",
+        "options": [
+          {"id": "a", "text": "They can fly"},
+          {"id": "b", "text": "They climb trees and crack coconuts"},
+          {"id": "c", "text": "They change colors"},
+          {"id": "d", "text": "They glow in the dark"}
+        ],
+        "correctAnswer": "b",
+        "explanation": "Coconut crabs are the largest land crabs and can climb palm trees to steal and crack coconuts!"
+      }
+    ]
+  }
+]

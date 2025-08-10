@@ -1,0 +1,343 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Fredoka+One:wght@400&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(202, 100%, 97%);
+  --foreground: hsl(210, 25%, 7.8431%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(210, 25%, 7.8431%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(210, 25%, 7.8431%);
+  --primary: hsl(203.8863, 88.2845%, 53.1373%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(210, 25%, 7.8431%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(240, 1.9608%, 90%);
+  --muted-foreground: hsl(210, 25%, 7.8431%);
+  --accent: hsl(211.5789, 51.3514%, 92.7451%);
+  --accent-foreground: hsl(203.8863, 88.2845%, 53.1373%);
+  --destructive: hsl(356.3033, 90.5579%, 54.3137%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(201.4286, 30.4348%, 90.9804%);
+  --input: hsl(200, 23.0769%, 97.4510%);
+  --ring: hsl(202.8169, 89.1213%, 53.1373%);
+  --chart-1: hsl(203.8863, 88.2845%, 53.1373%);
+  --chart-2: hsl(159.7826, 100%, 36.0784%);
+  --chart-3: hsl(42.0290, 92.8251%, 56.2745%);
+  --chart-4: hsl(147.1429, 78.5047%, 41.9608%);
+  --chart-5: hsl(341.4894, 75.2000%, 50.9804%);
+  --sidebar: hsl(180, 6.6667%, 97.0588%);
+  --sidebar-foreground: hsl(210, 25%, 7.8431%);
+  --sidebar-primary: hsl(203.8863, 88.2845%, 53.1373%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(211.5789, 51.3514%, 92.7451%);
+  --sidebar-accent-foreground: hsl(203.8863, 88.2845%, 53.1373%);
+  --sidebar-border: hsl(205.0000, 25.0000%, 90.5882%);
+  --sidebar-ring: hsl(202.8169, 89.1213%, 53.1373%);
+  --font-sans: 'Quicksand', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --font-fredoka: 'Fredoka One', cursive;
+  --radius: 1.3rem;
+  
+  /* Ocean theme colors */
+  --ocean-50: hsl(202, 100%, 97%);
+  --ocean-100: hsl(201, 94%, 94%);
+  --ocean-200: hsl(200, 94%, 86%);
+  --ocean-300: hsl(199, 95%, 74%);
+  --ocean-400: hsl(198, 93%, 60%);
+  --ocean-500: hsl(199, 89%, 48%);
+  --ocean-600: hsl(200, 98%, 39%);
+  --ocean-700: hsl(201, 96%, 32%);
+  --ocean-800: hsl(201, 90%, 27%);
+  --ocean-900: hsl(202, 80%, 24%);
+  
+  /* Coral theme colors */
+  --coral-50: hsl(327, 73%, 97%);
+  --coral-100: hsl(326, 78%, 95%);
+  --coral-200: hsl(326, 85%, 90%);
+  --coral-300: hsl(327, 87%, 81%);
+  --coral-400: hsl(329, 86%, 70%);
+  --coral-500: hsl(330, 81%, 60%);
+  --coral-600: hsl(333, 71%, 51%);
+  --coral-700: hsl(335, 78%, 42%);
+  --coral-800: hsl(336, 74%, 35%);
+  --coral-900: hsl(336, 69%, 30%);
+  
+  /* Sunny theme colors */
+  --sunny-50: hsl(55, 92%, 95%);
+  --sunny-100: hsl(55, 97%, 88%);
+  --sunny-200: hsl(53, 98%, 77%);
+  --sunny-300: hsl(50, 98%, 64%);
+  --sunny-400: hsl(48, 96%, 53%);
+  --sunny-500: hsl(45, 93%, 47%);
+  --sunny-600: hsl(41, 96%, 40%);
+  --sunny-700: hsl(35, 91%, 33%);
+  --sunny-800: hsl(32, 81%, 29%);
+  --sunny-900: hsl(28, 73%, 26%);
+  
+  /* New colors for additional crab species */
+  --brown-50: hsl(30, 20%, 95%);
+  --brown-100: hsl(30, 25%, 90%);
+  --brown-200: hsl(30, 30%, 80%);
+  --brown-300: hsl(30, 35%, 70%);
+  --brown-400: hsl(30, 40%, 60%);
+  --brown-500: hsl(30, 45%, 50%);
+  --brown-600: hsl(30, 50%, 40%);
+  --brown-700: hsl(30, 55%, 30%);
+  --brown-800: hsl(30, 60%, 20%);
+  --brown-900: hsl(30, 65%, 10%);
+  
+  --teal-50: hsl(180, 20%, 95%);
+  --teal-100: hsl(180, 25%, 90%);
+  --teal-200: hsl(180, 30%, 80%);
+  --teal-300: hsl(180, 35%, 70%);
+  --teal-400: hsl(180, 40%, 60%);
+  --teal-500: hsl(180, 45%, 50%);
+  --teal-600: hsl(180, 50%, 40%);
+  --teal-700: hsl(180, 55%, 30%);
+  --teal-800: hsl(180, 60%, 20%);
+  --teal-900: hsl(180, 65%, 10%);
+  
+  --olive-50: hsl(60, 20%, 95%);
+  --olive-100: hsl(60, 25%, 90%);
+  --olive-200: hsl(60, 30%, 80%);
+  --olive-300: hsl(60, 35%, 70%);
+  --olive-400: hsl(60, 40%, 60%);
+  --olive-500: hsl(60, 45%, 50%);
+  --olive-600: hsl(60, 50%, 40%);
+  --olive-700: hsl(60, 55%, 30%);
+  --olive-800: hsl(60, 60%, 20%);
+  --olive-900: hsl(60, 65%, 10%);
+  
+  --white-50: hsl(0, 0%, 98%);
+  --white-100: hsl(0, 0%, 95%);
+  --white-200: hsl(0, 0%, 90%);
+  --white-300: hsl(0, 0%, 80%);
+  --white-400: hsl(0, 0%, 70%);
+  --white-500: hsl(0, 0%, 60%);
+  --white-600: hsl(0, 0%, 50%);
+  --white-700: hsl(0, 0%, 40%);
+  --white-800: hsl(0, 0%, 30%);
+  --white-900: hsl(0, 0%, 20%);
+  
+  --gold-50: hsl(45, 100%, 95%);
+  --gold-100: hsl(45, 100%, 90%);
+  --gold-200: hsl(45, 100%, 80%);
+  --gold-300: hsl(45, 100%, 70%);
+  --gold-400: hsl(45, 100%, 60%);
+  --gold-500: hsl(45, 100%, 50%);
+  --gold-600: hsl(45, 100%, 40%);
+  --gold-700: hsl(45, 100%, 30%);
+  --gold-800: hsl(45, 100%, 20%);
+  --gold-900: hsl(45, 100%, 10%);
+  
+  --peach-50: hsl(20, 100%, 95%);
+  --peach-100: hsl(20, 100%, 90%);
+  --peach-200: hsl(20, 100%, 80%);
+  --peach-300: hsl(20, 100%, 70%);
+  --peach-400: hsl(20, 100%, 60%);
+  --peach-500: hsl(20, 100%, 50%);
+  --peach-600: hsl(20, 100%, 40%);
+  --peach-700: hsl(20, 100%, 30%);
+  --peach-800: hsl(20, 100%, 20%);
+  --peach-900: hsl(20, 100%, 10%);
+  
+  --dark-blue-50: hsl(220, 100%, 95%);
+  --dark-blue-100: hsl(220, 100%, 90%);
+  --dark-blue-200: hsl(220, 100%, 80%);
+  --dark-blue-300: hsl(220, 100%, 70%);
+  --dark-blue-400: hsl(220, 100%, 60%);
+  --dark-blue-500: hsl(220, 100%, 50%);
+  --dark-blue-600: hsl(220, 100%, 40%);
+  --dark-blue-700: hsl(220, 100%, 30%);
+  --dark-blue-800: hsl(220, 100%, 20%);
+  --dark-blue-900: hsl(220, 100%, 10%);
+  
+  --rainbow-50: hsl(0, 100%, 95%);
+  --rainbow-100: hsl(60, 100%, 95%);
+  --rainbow-200: hsl(120, 100%, 95%);
+  --rainbow-300: hsl(180, 100%, 95%);
+  --rainbow-400: hsl(240, 100%, 95%);
+  --rainbow-500: hsl(300, 100%, 95%);
+  --rainbow-600: hsl(0, 100%, 85%);
+  --rainbow-700: hsl(60, 100%, 85%);
+  --rainbow-800: hsl(120, 100%, 85%);
+  --rainbow-900: hsl(180, 100%, 85%);
+}
+
+.dark {
+  --background: hsl(202, 80%, 8%);
+  --foreground: hsl(200, 6.6667%, 91.1765%);
+  --card: hsl(201, 50%, 12%);
+  --card-foreground: hsl(0, 0%, 85.0980%);
+  --popover: hsl(202, 80%, 8%);
+  --popover-foreground: hsl(200, 6.6667%, 91.1765%);
+  --primary: hsl(203.7736, 87.6033%, 52.5490%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(195.0000, 15.3846%, 94.9020%);
+  --secondary-foreground: hsl(210, 25%, 7.8431%);
+  --muted: hsl(202, 40%, 15%);
+  --muted-foreground: hsl(210, 3.3898%, 46.2745%);
+  --accent: hsl(201, 70%, 16%);
+  --accent-foreground: hsl(203.7736, 87.6033%, 52.5490%);
+  --destructive: hsl(356.3033, 90.5579%, 54.3137%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(201, 20%, 20%);
+  --input: hsl(201, 30%, 18%);
+  --ring: hsl(202.8169, 89.1213%, 53.1373%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-gradient-to-br from-ocean-50 to-ocean-100 text-foreground min-h-screen;
+    font-family: var(--font-sans);
+  }
+  
+  .font-fredoka {
+    font-family: var(--font-fredoka);
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-bubble {
+    animation: bubble 4s ease-in-out infinite;
+  }
+  
+  .animate-bounce-gentle {
+    animation: bounceGentle 2s ease-in-out infinite;
+  }
+  
+  .wave-bg {
+    background: linear-gradient(45deg, var(--ocean-500), var(--ocean-400), var(--ocean-300));
+    background-size: 400% 400%;
+    animation: gradientShift 8s ease infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes bubble {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-20px) scale(1.1); }
+}
+
+@keyframes bounceGentle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Custom ocean theme colors for Tailwind */
+.bg-ocean-50 { background-color: var(--ocean-50); }
+.bg-ocean-100 { background-color: var(--ocean-100); }
+.bg-ocean-200 { background-color: var(--ocean-200); }
+.bg-ocean-300 { background-color: var(--ocean-300); }
+.bg-ocean-400 { background-color: var(--ocean-400); }
+.bg-ocean-500 { background-color: var(--ocean-500); }
+.bg-ocean-600 { background-color: var(--ocean-600); }
+.bg-ocean-700 { background-color: var(--ocean-700); }
+.bg-ocean-800 { background-color: var(--ocean-800); }
+.bg-ocean-900 { background-color: var(--ocean-900); }
+
+.text-ocean-50 { color: var(--ocean-50); }
+.text-ocean-100 { color: var(--ocean-100); }
+.text-ocean-200 { color: var(--ocean-200); }
+.text-ocean-300 { color: var(--ocean-300); }
+.text-ocean-400 { color: var(--ocean-400); }
+.text-ocean-500 { color: var(--ocean-500); }
+.text-ocean-600 { color: var(--ocean-600); }
+.text-ocean-700 { color: var(--ocean-700); }
+.text-ocean-800 { color: var(--ocean-800); }
+.text-ocean-900 { color: var(--ocean-900); }
+
+.border-ocean-50 { border-color: var(--ocean-50); }
+.border-ocean-100 { border-color: var(--ocean-100); }
+.border-ocean-200 { border-color: var(--ocean-200); }
+.border-ocean-300 { border-color: var(--ocean-300); }
+.border-ocean-400 { border-color: var(--ocean-400); }
+.border-ocean-500 { border-color: var(--ocean-500); }
+.border-ocean-600 { border-color: var(--ocean-600); }
+
+.hover\:bg-ocean-50:hover { background-color: var(--ocean-50); }
+.hover\:bg-ocean-600:hover { background-color: var(--ocean-600); }
+.hover\:border-ocean-300:hover { border-color: var(--ocean-300); }
+
+/* Coral colors */
+.bg-coral-50 { background-color: var(--coral-50); }
+.bg-coral-100 { background-color: var(--coral-100); }
+.bg-coral-200 { background-color: var(--coral-200); }
+.bg-coral-300 { background-color: var(--coral-300); }
+.bg-coral-400 { background-color: var(--coral-400); }
+.bg-coral-500 { background-color: var(--coral-500); }
+.bg-coral-600 { background-color: var(--coral-600); }
+.bg-coral-700 { background-color: var(--coral-700); }
+
+.text-coral-600 { color: var(--coral-600); }
+.text-coral-700 { color: var(--coral-700); }
+
+.border-coral-100 { border-color: var(--coral-100); }
+.border-coral-300 { border-color: var(--coral-300); }
+
+.hover\:bg-coral-600:hover { background-color: var(--coral-600); }
+.hover\:border-coral-300:hover { border-color: var(--coral-300); }
+
+/* Sunny colors */
+.bg-sunny-100 { background-color: var(--sunny-100); }
+.bg-sunny-300 { background-color: var(--sunny-300); }
+.bg-sunny-500 { background-color: var(--sunny-500); }
+.bg-sunny-600 { background-color: var(--sunny-600); }
+
+.text-sunny-600 { color: var(--sunny-600); }
+.text-sunny-700 { color: var(--sunny-700); }
+
+.border-sunny-100 { border-color: var(--sunny-100); }
+.border-sunny-300 { border-color: var(--sunny-300); }
+
+.hover\:bg-sunny-600:hover { background-color: var(--sunny-600); }
+.hover\:border-sunny-300:hover { border-color: var(--sunny-300); }
+
+/* New color utilities for additional crab species */
+.bg-brown-500 { background-color: var(--brown-500); }
+.bg-teal-500 { background-color: var(--teal-500); }
+.bg-olive-500 { background-color: var(--olive-500); }
+.bg-white-500 { background-color: var(--white-500); }
+.bg-gold-500 { background-color: var(--gold-500); }
+.bg-peach-500 { background-color: var(--peach-500); }
+.bg-dark-blue-500 { background-color: var(--dark-blue-500); }
+.bg-rainbow-500 { background-color: var(--rainbow-500); }
+
+.text-brown-500 { color: var(--brown-500); }
+.text-teal-500 { color: var(--teal-500); }
+.text-olive-500 { color: var(--olive-500); }
+.text-white-500 { color: var(--white-500); }
+.text-gold-500 { color: var(--gold-500); }
+.text-peach-500 { color: var(--peach-500); }
+.text-dark-blue-500 { color: var(--dark-blue-500); }
+.text-rainbow-500 { color: var(--rainbow-500); }
+
+.border-brown-500 { border-color: var(--brown-500); }
+.border-teal-500 { border-color: var(--teal-500); }
+.border-olive-500 { border-color: var(--olive-500); }
+.border-white-500 { border-color: var(--white-500); }
+.border-gold-500 { border-color: var(--gold-500); }
+.border-peach-500 { border-color: var(--peach-500); }
+.border-dark-blue-500 { border-color: var(--dark-blue-500); }
+.border-rainbow-500 { border-color: var(--rainbow-500); }
