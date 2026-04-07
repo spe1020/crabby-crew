@@ -1,261 +1,238 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { storage } from '../server/storage';
-import { insertGameProgressSchema, insertQuizAttemptSchema, updateProfileSchema, createUserSchema } from '../shared/schema';
+import { insertQuizAttemptSchema, updateProfileSchema } from '../shared/schema';
 
-// Simple in-memory session storage for serverless functions
-const activeUsers = new Map<string, string>(); // sessionId -> userId
+// In-memory session store (resets on cold start — acceptable for demo)
+const activeUsers = new Map<string, string>();
 
-// Helper function to get user from session
-function getUserFromSession(req: VercelRequest): string | null {
-  const sessionId = req.headers.cookie?.match(/crabby-crew-session=([^;]+)/)?.[1];
-  if (sessionId && activeUsers.has(sessionId)) {
-    return activeUsers.get(sessionId)!;
-  }
-  return null;
+function getUserId(req: VercelRequest): string | null {
+  const sid = req.headers.cookie?.match(/crabby-crew-session=([^;]+)/)?.[1];
+  return sid ? activeUsers.get(sid) ?? null : null;
 }
 
-// Helper function to set session
-function setUserSession(res: VercelResponse, userId: string): string {
-  const sessionId = Math.random().toString(36).substring(2, 15);
-  activeUsers.set(sessionId, userId);
-  
-  // Set cookie
-  res.setHeader('Set-Cookie', `crabby-crew-session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`);
-  
-  return sessionId;
+function setSession(res: VercelResponse, userId: string) {
+  const sid = Math.random().toString(36).slice(2, 15) + Date.now().toString(36);
+  activeUsers.set(sid, userId);
+  res.setHeader('Set-Cookie', `crabby-crew-session=${sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Enable CORS
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { pathname } = new URL(req.url || '', `http://${req.headers.host}`);
   const path = pathname.replace('/api', '');
 
   try {
-    // Health check endpoint
+    // ── Health ──
     if (path === '/health' && req.method === 'GET') {
-      return res.json({ 
-        status: 'ok', 
-        message: 'Crabby Crew API is running', 
-        timestamp: new Date().toISOString() 
-      });
+      return res.json({ status: 'ok', message: 'Crabby Crew API is running', timestamp: new Date().toISOString() });
     }
 
-    // Auth routes
+    // ── Auth: login ──
     if (path === '/auth/login' && req.method === 'POST') {
       const { username, createNew } = req.body;
-      
-      if (!username || username.length < 3) {
-        return res.status(400).json({ message: "Username must be at least 3 characters" });
-      }
+      if (!username || username.length < 3) return res.status(400).json({ message: "Username must be at least 3 characters" });
 
       let user = await storage.getUserByUsername(username);
-      
       if (!user && createNew) {
-        user = await storage.createUser({ 
-          username,
-          displayName: username,
-          avatarEmoji: "🦀"
-        });
+        user = await storage.createUser({ username, displayName: username, avatarEmoji: "🦀" });
       } else if (!user) {
         return res.status(404).json({ message: "User not found. Try creating a new account." });
       }
 
-      const sessionId = setUserSession(res, user.id);
+      setSession(res, user.id);
       await storage.updateUser(user.id, { isOnline: true, lastSeen: new Date() });
-      
       return res.json({ user, message: "Login successful" });
     }
 
+    // ── Auth: check ──
     if (path === '/auth/user' && req.method === 'GET') {
-      const userId = getUserFromSession(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
       const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
+      if (!user) return res.status(404).json({ message: "User not found" });
       return res.json(user);
     }
 
+    // ── Auth: logout ──
     if (path === '/auth/logout' && req.method === 'POST') {
-      const userId = getUserFromSession(req);
+      const userId = getUserId(req);
       if (userId) {
         await storage.updateUser(userId, { isOnline: false, lastSeen: new Date() });
-        // Clear session
-        const sessionId = req.headers.cookie?.match(/crabby-crew-session=([^;]+)/)?.[1];
-        if (sessionId) {
-          activeUsers.delete(sessionId);
-        }
+        const sid = req.headers.cookie?.match(/crabby-crew-session=([^;]+)/)?.[1];
+        if (sid) activeUsers.delete(sid);
       }
-      
+      res.setHeader('Set-Cookie', 'crabby-crew-session=; Path=/; HttpOnly; Max-Age=0');
       return res.json({ message: "Logout successful" });
     }
 
-    // Profile management
+    // ── Profile ──
     if (path === '/profile' && req.method === 'PUT') {
-      const userId = getUserFromSession(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      const validatedData = updateProfileSchema.parse(req.body);
-      const updatedUser = await storage.updateProfile(userId, validatedData);
-      
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      return res.json(updatedUser);
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      const data = updateProfileSchema.parse(req.body);
+      const user = await storage.updateProfile(userId, data);
+      return user ? res.json(user) : res.status(404).json({ message: "User not found" });
     }
 
-    // Game progress routes
-    if (path.match(/^\/progress\/(.+)$/) && req.method === 'GET') {
-      const userId = getUserFromSession(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
+    // ── Progress GET ──
+    const progressMatch = path.match(/^\/progress\/(.+)$/);
+    if (progressMatch && req.method === 'GET') {
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      if (userId !== progressMatch[1]) return res.status(403).json({ message: "Forbidden" });
 
-      const progressUserId = path.split('/')[2];
-      if (userId !== progressUserId) {
-        return res.status(403).json({ message: "Not authorized to access this progress" });
-      }
-      
       let progress = await storage.getGameProgress(userId);
-      
       if (!progress) {
         progress = await storage.createGameProgress({
-          userId,
-          totalXp: 0,
-          currentStreak: 0,
-          longestStreak: 0,
-          level: 1,
-          badges: [],
-          completedQuizzes: [],
-          learnedSpecies: [],
-          lastActivityDate: null,
-          difficultyLevel: 1
+          userId, totalXp: 0, currentStreak: 0, longestStreak: 0, level: 1,
+          badges: [], completedQuizzes: [], learnedSpecies: [], lastActivityDate: null, difficultyLevel: 1,
         });
       }
-      
       return res.json(progress);
     }
 
-    if (path.match(/^\/progress\/(.+)$/) && req.method === 'POST') {
-      const userId = getUserFromSession(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const progressUserId = path.split('/')[2];
-      if (userId !== progressUserId) {
-        return res.status(403).json({ message: "Not authorized to update this progress" });
-      }
-      
-      const updates = req.body;
-      const progress = await storage.updateGameProgress(userId, updates);
-      
-      if (!progress) {
-        return res.status(404).json({ message: "Progress not found" });
-      }
-      
-      return res.json(progress);
+    // ── Progress POST ──
+    if (progressMatch && req.method === 'POST') {
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      if (userId !== progressMatch[1]) return res.status(403).json({ message: "Forbidden" });
+      const progress = await storage.updateGameProgress(userId, req.body);
+      return progress ? res.json(progress) : res.status(404).json({ message: "Progress not found" });
     }
 
-    // Quiz attempt routes
+    // ── Quiz attempts ──
     if (path === '/quiz-attempts' && req.method === 'POST') {
-      const userId = getUserFromSession(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      const data = insertQuizAttemptSchema.parse(req.body);
+      if (data.userId !== userId) return res.status(403).json({ message: "Forbidden" });
 
-      const validatedData = insertQuizAttemptSchema.parse(req.body);
-      const quizAttempt = await storage.createQuizAttempt({
-        ...validatedData,
-        userId
+      const attempt = await storage.createQuizAttempt(data);
+
+      // Update progress (mirrors Express route logic)
+      let prog = await storage.getGameProgress(userId);
+      if (!prog) prog = await storage.createGameProgress({ userId, totalXp: 0, currentStreak: 0, longestStreak: 0, level: 1, badges: [], completedQuizzes: [], learnedSpecies: [], lastActivityDate: null, difficultyLevel: 1 });
+
+      const newXp = prog.totalXp + data.xpEarned;
+      const today = new Date().toISOString().split('T')[0];
+      let streak = prog.currentStreak;
+      if (prog.lastActivityDate !== today) {
+        const y = new Date(); y.setDate(y.getDate() - 1);
+        streak = prog.lastActivityDate === y.toISOString().split('T')[0] ? streak + 1 : 1;
+      }
+      const badges = [...prog.badges];
+      if (newXp >= 1000 && !badges.includes("crab-expert")) badges.push("crab-expert");
+      if (streak >= 7 && !badges.includes("streak-master")) badges.push("streak-master");
+      const newLevel = Math.floor(newXp / 200) + 1;
+      if (newLevel >= 5 && !badges.includes("level-5")) badges.push("level-5");
+
+      await storage.updateGameProgress(userId, {
+        totalXp: newXp, level: newLevel, currentStreak: streak,
+        longestStreak: Math.max(prog.longestStreak, streak),
+        badges, lastActivityDate: today,
+        completedQuizzes: [...prog.completedQuizzes, data.quizId],
       });
-      
-      return res.json(quizAttempt);
+
+      return res.json(attempt);
     }
 
-    // Crab flipped endpoint
+    // ── Learn species ──
+    const learnMatch = path.match(/^\/learn-species\/(.+)$/);
+    if (learnMatch && req.method === 'POST') {
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      if (userId !== learnMatch[1]) return res.status(403).json({ message: "Forbidden" });
+      const { speciesId } = req.body;
+
+      let prog = await storage.getGameProgress(userId);
+      if (!prog) prog = await storage.createGameProgress({ userId, totalXp: 0, currentStreak: 0, longestStreak: 0, level: 1, badges: [], completedQuizzes: [], learnedSpecies: [], lastActivityDate: null, difficultyLevel: 1 });
+      if (prog.learnedSpecies.includes(speciesId)) return res.json(prog);
+
+      const learned = [...prog.learnedSpecies, speciesId];
+      const badges = [...prog.badges];
+      if (learned.length >= 5 && !badges.includes("first-steps")) badges.push("first-steps");
+      if (learned.length >= 10 && !badges.includes("species-collector")) badges.push("species-collector");
+
+      const updated = await storage.updateGameProgress(userId, { learnedSpecies: learned, badges, totalXp: prog.totalXp + 25 });
+      return res.json(updated);
+    }
+
+    // ── Crab flipped ──
     if (path === '/crab-flipped' && req.method === 'POST') {
-      const userId = getUserFromSession(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      const { crabId } = req.body;
+      if (!crabId) return res.status(400).json({ message: "Crab ID required" });
+
+      let prog = await storage.getGameProgress(userId);
+      if (!prog) prog = await storage.createGameProgress({ userId, totalXp: 0, currentStreak: 0, longestStreak: 0, level: 1, badges: [], completedQuizzes: [], learnedSpecies: [], lastActivityDate: null, difficultyLevel: 1 });
+
+      if (prog.flippedCrabs?.includes(crabId)) {
+        return res.json({ message: "Already discovered", progress: prog, xpEarned: 0 });
       }
 
-      const { crabId, xpGained } = req.body;
-      
-      // Update user progress
-      const progress = await storage.getGameProgress(userId);
-      if (progress) {
-        await storage.updateGameProgress(userId, {
-          totalXp: (progress.totalXp || 0) + (xpGained || 10),
-          learnedSpecies: [...(progress.learnedSpecies || []), crabId].filter((v, i, a) => a.indexOf(v) === i)
-        });
-      }
-      
-      return res.json({ message: "Crab discovery recorded", progress });
+      const newXp = prog.totalXp + 25;
+      const flipped = [...(prog.flippedCrabs || []), crabId];
+      const updated = await storage.updateGameProgress(userId, { totalXp: newXp, flippedCrabs: flipped, lastActivityDate: new Date().toISOString() });
+      return res.json({ message: "Crab discovery recorded", progress: updated, xpEarned: 25 });
     }
 
-    // Video complete endpoint
+    // ── Video complete ──
     if (path === '/video-complete' && req.method === 'POST') {
-      const userId = getUserFromSession(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      const { videoId } = req.body;
+      if (!videoId) return res.status(400).json({ message: "Video ID required" });
 
-      const { videoId, xpGained } = req.body;
-      
-      // Update user progress
-      const progress = await storage.getGameProgress(userId);
-      if (progress) {
-        await storage.updateGameProgress(userId, {
-          totalXp: (progress.totalXp || 0) + (xpGained || 15)
-        });
-      }
-      
-      return res.json({ message: "Video marked as complete", progress });
+      let prog = await storage.getGameProgress(userId);
+      if (!prog) prog = await storage.createGameProgress({ userId, totalXp: 0, currentStreak: 0, longestStreak: 0, level: 1, badges: [], completedQuizzes: [], learnedSpecies: [], watchedVideos: [], lastActivityDate: null, difficultyLevel: 1 });
+
+      if (prog.watchedVideos?.includes(videoId)) return res.status(400).json({ message: "Already completed" });
+
+      const watched = [...(prog.watchedVideos || []), videoId];
+      const newXp = prog.totalXp + 50;
+      const updated = await storage.updateGameProgress(userId, { watchedVideos: watched, totalXp: newXp, lastActivityDate: new Date().toISOString() });
+      return res.json({ message: "Video marked as complete", progress: updated, xpEarned: 50 });
     }
 
-    // Weekly challenges endpoint
-    if (path === '/weekly-challenges' && req.method === 'GET') {
-      const challenges = await storage.getWeeklyChallenges();
-      return res.json(challenges);
-    }
-
-    // Leaderboards endpoint
+    // ── Leaderboards ──
     if (path === '/leaderboards' && req.method === 'GET') {
-      const leaderboards = await storage.getLeaderboards();
-      return res.json(leaderboards);
+      const category = (req.query.category as string) || undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const entries = await storage.getLeaderboards(category, limit);
+
+      const withUsers = [];
+      for (const entry of entries) {
+        const user = await storage.getUser(entry.userId);
+        if (user) withUsers.push({ ...entry, user: { id: user.id, username: user.username, displayName: user.displayName, avatarEmoji: user.avatarEmoji } });
+      }
+      return res.json(withUsers);
     }
 
-    // Public achievements endpoint
+    // ── Weekly challenges ──
+    if (path === '/weekly-challenges' && req.method === 'GET') {
+      return res.json(await storage.getActiveWeeklyChallenges());
+    }
+
+    // ── Public achievements ──
     if (path === '/public-achievements' && req.method === 'GET') {
-      const achievements = await storage.getPublicAchievements();
-      return res.json(achievements);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      return res.json(await storage.getPublicAchievements(limit));
     }
 
-    // Top users week endpoint
+    // ── Top users week ──
     if (path === '/top-users-week' && req.method === 'GET') {
-      const topUsers = await storage.getTopUsersWeek();
-      return res.json(topUsers);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      return res.json(await storage.getTopUsersThisWeek(limit));
     }
 
-    // If no route matches
-    return res.status(404).json({ message: "API endpoint not found" });
-
+    return res.status(404).json({ message: "Not found" });
   } catch (error) {
     console.error('API Error:', error);
     return res.status(500).json({ message: "Internal server error" });
