@@ -3,8 +3,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface Question {
@@ -36,7 +34,7 @@ export default function QuizInterface({ quiz, onComplete }: QuizInterfaceProps) 
   const [isCorrect, setIsCorrect] = useState(false);
   const [score, setScore] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -44,11 +42,9 @@ export default function QuizInterface({ quiz, onComplete }: QuizInterfaceProps) 
 
   const submitQuizMutation = useMutation({
     mutationFn: async (finalScore: number) => {
-      if (!userId) {
-        throw new Error("Please sign in to save your quiz progress");
-      }
+      if (!userId) throw new Error("Please sign in to save your quiz progress");
       const response = await apiRequest('/api/quiz-attempts', 'POST', {
-        userId: userId,
+        userId,
         quizId: quiz.id,
         score: finalScore,
         totalQuestions: quiz.questions.length,
@@ -59,169 +55,128 @@ export default function QuizInterface({ quiz, onComplete }: QuizInterfaceProps) 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/progress', userId] });
-      toast({
-        title: "Quiz Complete! 🎉",
-        description: `You earned ${Math.floor((score / quiz.questions.length) * quiz.xpReward)} XP!`,
-      });
+      toast({ title: "Quiz Complete! 🎉", description: `You earned ${Math.floor((score / quiz.questions.length) * quiz.xpReward)} XP!` });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save quiz progress. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to save quiz progress.", variant: "destructive" });
     },
   });
 
   const currentQuestion = quiz.questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
 
-  const handleAnswerSelect = (answerId: string) => {
-    setSelectedAnswer(answerId);
-  };
-
   const handleSubmitAnswer = () => {
     if (!selectedAnswer) return;
-
     const correct = selectedAnswer === currentQuestion.correctAnswer;
     setIsCorrect(correct);
-    if (correct) {
-      setScore(score + 1);
-    }
+    if (correct) setScore(score + 1);
     setShowResult(true);
   };
 
   const handleNextQuestion = () => {
     setShowResult(false);
     setSelectedAnswer(null);
-    
     if (currentQuestionIndex + 1 < quiz.questions.length) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // Quiz completed
       setQuizCompleted(true);
       submitQuizMutation.mutate(score + (isCorrect ? 1 : 0));
     }
   };
 
-  const handleCompleteQuiz = () => {
-    onComplete();
-  };
-
+  // ── Completed ──
   if (quizCompleted) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <Card className="text-center p-12">
-          <CardContent>
-            <div className="text-8xl mb-6">🎉</div>
-            <h2 className="text-4xl font-fredoka text-ocean-600 mb-4">Quiz Complete!</h2>
-            <p className="text-2xl text-gray-600 mb-6">
-              You scored {score} out of {quiz.questions.length}
-            </p>
-            <div className="bg-sunny-100 p-6 rounded-2xl mb-8 max-w-md mx-auto">
-              <div className="text-3xl font-bold text-sunny-700">
-                +{Math.floor((score / quiz.questions.length) * quiz.xpReward)} XP
-              </div>
-              <div className="text-sunny-600">XP Earned!</div>
-            </div>
-            <Button 
-              onClick={handleCompleteQuiz}
-              className="bg-ocean-500 hover:bg-ocean-600 text-white px-8 py-4 text-xl"
-            >
-              Back to Quests
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="max-w-lg mx-auto px-4 py-12 text-center">
+        <div className="glass-card-lg p-10">
+          <div className="text-7xl mb-4">🎉</div>
+          <h2 className="font-fredoka text-white text-3xl mb-3">Quiz Complete!</h2>
+          <p className="text-white/60 text-lg mb-6">You scored {score} out of {quiz.questions.length}</p>
+          <div className="rounded-xl p-5 mb-8 bg-[#ff6b4a]/10 border border-[#ff6b4a]/20">
+            <div className="text-2xl font-bold text-[#ff6b4a]">+{Math.floor((score / quiz.questions.length) * quiz.xpReward)} XP</div>
+            <div className="text-[#ff6b4a]/60 text-sm">Earned!</div>
+          </div>
+          <button onClick={onComplete} className="cta-glass font-semibold px-8 py-3 rounded-full">
+            Back to Quests
+          </button>
+        </div>
       </div>
     );
   }
 
+  // ── Quiz in progress ──
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="text-center mb-8">
-        <h2 className="text-4xl font-fredoka text-coral-600 mb-4">🎯 {quiz.title} 🎯</h2>
-        <p className="text-xl text-gray-600">{quiz.description}</p>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="text-center mb-6">
+        <h2 className="section-title text-2xl sm:text-3xl mb-2">⚔️ {quiz.title}</h2>
+        <p className="section-subtitle">{quiz.description}</p>
       </div>
 
-      <Card className="p-8 mb-8">
-        <CardContent>
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-lg font-semibold text-gray-600">
-                Question {currentQuestionIndex + 1} of {quiz.questions.length}
-              </span>
-              <div className="bg-sunny-100 px-4 py-2 rounded-full">
-                <span className="text-sunny-700 font-semibold">⚡ +{quiz.xpReward} XP</span>
-              </div>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-gradient-to-r from-coral-400 to-coral-600 h-3 rounded-full transition-all duration-500" 
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
+      <div className="glass-card-lg p-6 sm:p-8 mb-6">
+        {/* Progress bar */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-white/60 text-sm font-semibold">Question {currentQuestionIndex + 1} of {quiz.questions.length}</span>
+            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#ff6b4a]/15 text-[#ff6b4a]">⚡ +{quiz.xpReward} XP</span>
           </div>
-
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6">{currentQuestion.question}</h3>
-            
-            <div className="space-y-4">
-              {currentQuestion.options.map((option, index) => (
-                <button
-                  key={option.id}
-                  onClick={() => handleAnswerSelect(option.id)}
-                  className={`w-full p-4 text-left border-2 rounded-2xl transition-all duration-200 ${
-                    selectedAnswer === option.id
-                      ? 'bg-ocean-100 border-ocean-400'
-                      : 'bg-gray-50 hover:bg-ocean-50 border-gray-200 hover:border-ocean-300'
-                  }`}
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                      selectedAnswer === option.id ? 'bg-ocean-400 text-white' : 'bg-gray-200'
-                    }`}>
-                      {String.fromCharCode(65 + index)}
-                    </div>
-                    <span className="text-lg">{option.text}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
+          <div className="progress-track h-2.5">
+            <div className="progress-fill h-2.5" style={{ width: `${progress}%` }} />
           </div>
+        </div>
 
-          <div className="text-center">
-            <Button
-              onClick={handleSubmitAnswer}
-              disabled={!selectedAnswer}
-              className="bg-coral-500 hover:bg-coral-600 text-white px-12 py-4 text-xl font-bold disabled:opacity-50"
+        {/* Question */}
+        <h3 className="text-white text-xl font-bold mb-6">{currentQuestion.question}</h3>
+
+        {/* Options */}
+        <div className="space-y-3 mb-8">
+          {currentQuestion.options.map((option, index) => (
+            <button
+              key={option.id}
+              onClick={() => setSelectedAnswer(option.id)}
+              className={`w-full p-4 text-left rounded-xl transition-all ${
+                selectedAnswer === option.id
+                  ? "bg-[#ff6b4a]/15 border border-[#ff6b4a]/40"
+                  : "bg-white/5 border border-white/5 hover:bg-white/8 hover:border-white/10"
+              }`}
             >
-              🚀 Submit Answer
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              <div className="flex items-center gap-3">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                  selectedAnswer === option.id ? "bg-[#ff6b4a] text-white" : "bg-white/10 text-white/50"
+                }`}>
+                  {String.fromCharCode(65 + index)}
+                </div>
+                <span className="text-white/90">{option.text}</span>
+              </div>
+            </button>
+          ))}
+        </div>
 
-      {/* Result Modal */}
+        <div className="text-center">
+          <button
+            onClick={handleSubmitAnswer}
+            disabled={!selectedAnswer}
+            className="cta-coral font-fredoka px-10 py-3 rounded-full text-base disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Submit Answer
+          </button>
+        </div>
+      </div>
+
+      {/* Result dialog */}
       <Dialog open={showResult} onOpenChange={setShowResult}>
-        <DialogContent className="max-w-md mx-4">
-          <div className="text-center p-6">
-            <div className="text-6xl mb-4">{isCorrect ? '🎉' : '😅'}</div>
-            <h3 className="text-3xl font-bold mb-4">
-              {isCorrect ? 'Correct!' : 'Not quite right!'}
-            </h3>
-            <p className="text-lg text-gray-600 mb-6">{currentQuestion.explanation}</p>
+        <DialogContent className="max-w-sm mx-4 bg-[#0a4d6e] border border-white/10 text-white">
+          <div className="text-center p-4">
+            <div className="text-5xl mb-3">{isCorrect ? '🎉' : '😅'}</div>
+            <h3 className="font-fredoka text-2xl mb-3">{isCorrect ? 'Correct!' : 'Not quite!'}</h3>
+            <p className="text-white/60 text-sm mb-5">{currentQuestion.explanation}</p>
             {isCorrect && (
-              <div className="bg-sunny-100 p-4 rounded-2xl mb-6">
-                <div className="text-2xl font-bold text-sunny-700">+{Math.floor(quiz.xpReward / quiz.questions.length)} XP</div>
-                <div className="text-sm text-sunny-600">XP Earned!</div>
+              <div className="rounded-xl p-3 mb-5 bg-[#ff6b4a]/10 border border-[#ff6b4a]/20">
+                <div className="text-xl font-bold text-[#ff6b4a]">+{Math.floor(quiz.xpReward / quiz.questions.length)} XP</div>
               </div>
             )}
-            <Button
-              onClick={handleNextQuestion}
-              className="bg-ocean-500 hover:bg-ocean-600 text-white px-8 py-3 font-bold"
-            >
+            <button onClick={handleNextQuestion} className="cta-coral font-semibold px-8 py-2.5 rounded-full text-sm">
               {currentQuestionIndex + 1 < quiz.questions.length ? 'Next Question →' : 'Complete Quiz 🎯'}
-            </Button>
+            </button>
           </div>
         </DialogContent>
       </Dialog>

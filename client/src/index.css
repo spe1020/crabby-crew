@@ -373,6 +373,76 @@
   border: 1px solid rgba(255,255,255,0.08);
 }
 
+/* ───── Shared dark-theme utilities ───── */
+
+.app-bg {
+  background: linear-gradient(170deg, #062a3e 0%, #0a4d6e 40%, #1a8a9e 100%);
+  min-height: 100vh;
+}
+
+.glass-card {
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 1.25rem;
+}
+
+.glass-card-lg {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 1.5rem;
+}
+
+.glass-card:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.glass-nav {
+  background: rgba(6, 42, 62, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.glass-bottom-nav {
+  background: rgba(6, 42, 62, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Stats pill on dark bg */
+.stat-pill {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 9999px;
+  padding: 0.375rem 0.75rem;
+}
+
+/* Progress bar on dark bg */
+.progress-track {
+  background: rgba(255,255,255,0.1);
+  border-radius: 9999px;
+}
+.progress-fill {
+  background: linear-gradient(90deg, #ff6b4a, #7ec8c8);
+  border-radius: 9999px;
+  transition: width 0.6s ease;
+}
+
+/* Section headings on dark bg */
+.section-title {
+  font-family: 'Fredoka One', cursive;
+  color: #fff;
+}
+.section-subtitle {
+  color: rgba(255,255,255,0.6);
+}
+
 /* Custom ocean theme colors for Tailwind */
 .bg-ocean-50 { background-color: var(--ocean-50); }
 .bg-ocean-100 { background-color: var(--ocean-100); }

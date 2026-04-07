@@ -37,47 +37,23 @@ export default function Learn() {
 
   const markCrabFlipped = useMutation({
     mutationFn: async (crabId: string) => {
-      console.log('Starting crab flip mutation for:', crabId);
-      try {
-        const response = await apiRequest('/api/crab-flipped', 'POST', { crabId });
-        console.log('API response received:', response);
-        const data = await response.json();
-        console.log('Parsed response data:', data);
-        return data;
-      } catch (error) {
-        console.error('Error in mutationFn:', error);
-        throw error;
-      }
+      const response = await apiRequest('/api/crab-flipped', 'POST', { crabId });
+      return await response.json();
     },
     onSuccess: (data) => {
-      console.log('Mutation succeeded with data:', data);
-      try {
-        // Invalidate the game progress query to refresh the data
-        queryClient.invalidateQueries({ queryKey: ['/api/progress', userId] });
-        
-        // Show progress update animation
-        setShowProgressUpdate(true);
-        setTimeout(() => setShowProgressUpdate(false), 600);
-        
-        // Only show XP toast if XP was actually earned
-        if (data.xpEarned > 0) {
-          // Add a small delay to make the XP feel more natural after the card flip
-          setTimeout(() => {
-            toast({
-              title: "XP Earned! 🎉",
-              description: `You earned ${data.xpEarned} XP for discovering a new crab!`,
-              variant: "default",
-              duration: 4000, // Show for 4 seconds
-            });
-          }, 500);
-        }
-      } catch (error) {
-        console.error('Error in onSuccess callback:', error);
-        // Don't show error toast here, just log it
+      queryClient.invalidateQueries({ queryKey: ['/api/progress', userId] });
+      setShowProgressUpdate(true);
+      setTimeout(() => setShowProgressUpdate(false), 600);
+      if (data.xpEarned > 0) {
+        setTimeout(() => {
+          toast({
+            title: "XP Earned! 🎉",
+            description: `You earned ${data.xpEarned} XP for discovering a new crab!`,
+          });
+        }, 500);
       }
     },
-    onError: (error) => {
-      console.error('Mutation failed with error:', error);
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to record your discovery. Please try again.",
@@ -100,75 +76,76 @@ export default function Learn() {
     setSelectedCrab(null);
   };
 
+  const discovered = progress?.flippedCrabs?.length || 0;
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Header */}
       <div className="text-center mb-8">
-        <h2 className="text-4xl font-fredoka text-ocean-600 mb-4">🦀 Meet the Crab Crew! 🦀</h2>
-        <p className="text-xl text-gray-600">Discover amazing crab species from around the world</p>
-        
+        <h2 className="section-title text-3xl sm:text-4xl mb-3">🦀 Meet the Crab Crew!</h2>
+        <p className="section-subtitle text-lg">Discover amazing crab species from around the world</p>
+
         {/* Progress Summary */}
         {progress && (
-          <div className={`mt-6 bg-gradient-to-r from-ocean-100 to-ocean-200 rounded-2xl p-4 inline-block ${showProgressUpdate ? 'progress-update' : ''}`}>
-            <div className="flex items-center space-x-6 text-ocean-700">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{progress.totalXp}</div>
-                <div className="text-sm">Total XP</div>
+          <div className={`mt-6 glass-card inline-flex items-center gap-6 px-6 py-3 ${showProgressUpdate ? 'progress-update' : ''}`}>
+            <div className="text-center">
+              <div className="text-xl font-bold text-white">{progress.totalXp}</div>
+              <div className="text-xs text-white/50">Total XP</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-white">
+                {discovered}<span className="text-sm text-white/50">/15</span>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">
-                  {progress.flippedCrabs?.length || 0}
-                  <span className="text-lg text-ocean-600">/15</span>
-                </div>
-                <div className="text-sm">Crabs Discovered</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{progress.level}</div>
-                <div className="text-sm">Level</div>
-              </div>
+              <div className="text-xs text-white/50">Discovered</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-white">{progress.level}</div>
+              <div className="text-xs text-white/50">Level</div>
             </div>
           </div>
         )}
 
-        {/* Completion Message */}
-        {progress && progress.flippedCrabs && progress.flippedCrabs.length === 15 && (
-          <div className="mt-4 text-center">
-            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg inline-block">
+        {/* Completion */}
+        {discovered === 15 && (
+          <div className="mt-4">
+            <span className="cta-coral inline-block font-fredoka px-6 py-2 rounded-full text-base">
               🎉 All Crabs Discovered! You're a Crab Master! 🦀
-            </div>
+            </span>
           </div>
         )}
       </div>
 
-      {/* Crab Species Grid */}
+      {/* Crab Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {crabsData.map((crab) => {
           const isDiscovered = progress?.flippedCrabs?.includes(crab.id) || false;
           return (
             <div key={crab.id} className="relative">
-              <CrabCard 
-                crab={crab} 
+              <CrabCard
+                crab={crab}
                 onClick={() => handleCrabClick(crab)}
                 onFlip={() => handleCrabFlip(crab.id)}
-                discoveredCount={progress?.flippedCrabs?.length || 0}
+                discoveredCount={discovered}
                 totalCount={15}
               />
               {isDiscovered && (
-                <div className="absolute top-4 right-4 text-3xl z-10">✅</div>
+                <div className="absolute top-4 right-4 text-2xl z-10">✅</div>
               )}
             </div>
           );
         })}
       </div>
 
+      {/* Back */}
       <div className="text-center">
         <Link href="/">
-          <button className="bg-ocean-500 hover:bg-ocean-600 text-white px-8 py-4 rounded-full text-xl font-bold transition-colors shadow-lg">
+          <button className="cta-glass font-semibold px-8 py-3 rounded-full">
             🏠 Back to Home
           </button>
         </Link>
       </div>
 
-      {/* Learning Modal */}
+      {/* Modal */}
       {selectedCrab && (
         <CrabLearningModal
           crab={selectedCrab}

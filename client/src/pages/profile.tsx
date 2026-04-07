@@ -3,13 +3,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { User, Settings, LogOut, Save, Crown, UserPlus } from "lucide-react";
 import { useGameProgress } from "@/hooks/use-game-progress";
+import { Link } from "wouter";
+import { User, Settings, LogOut, Save, Crown, UserPlus } from "lucide-react";
 
 const availableAvatars = [
   "🦀", "🌊", "🐚", "🔬", "🏖️", "🐠", "🫧", "⭐", "🏆", "👑",
@@ -27,7 +23,6 @@ export default function Profile() {
   const [username, setUsername] = useState("");
   const [showLogin, setShowLogin] = useState(false);
 
-  // Update form values when user data loads
   useEffect(() => {
     if (user) {
       setDisplayName((user as any).displayName || "");
@@ -40,19 +35,12 @@ export default function Profile() {
       return await apiRequest("/api/auth/login", "POST", data);
     },
     onSuccess: () => {
-      toast({
-        title: "Welcome!",
-        description: "Successfully signed in to Crabby Crew!",
-      });
+      toast({ title: "Welcome!", description: "Successfully signed in to Crabby Crew!" });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setShowLogin(false);
     },
     onError: (error: any) => {
-      toast({
-        title: "Sign In Failed",
-        description: error.message || "Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Sign In Failed", description: error.message || "Please try again.", variant: "destructive" });
     },
   });
 
@@ -61,327 +49,205 @@ export default function Profile() {
       return await apiRequest("/api/profile", "PUT", data);
     },
     onSuccess: () => {
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated!",
-      });
+      toast({ title: "Profile Updated", description: "Your profile has been saved!" });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
     onError: () => {
-      toast({
-        title: "Update Failed",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Update Failed", description: "Please try again.", variant: "destructive" });
     },
   });
-
-  const handleSaveProfile = () => {
-    updateProfileMutation.mutate({
-      displayName,
-      avatarEmoji: selectedAvatar,
-    });
-  };
-
-  const handleLogin = (createNew: boolean) => {
-    if (!username || username.length < 3) {
-      toast({
-        title: "Invalid Username",
-        description: "Username must be at least 3 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
-    loginMutation.mutate({ username, createNew });
-  };
 
   const handleLogout = async () => {
     try {
       await apiRequest("/api/auth/logout", "POST", {});
-      toast({
-        title: "Signed Out",
-        description: "Successfully signed out of Crabby Crew.",
-      });
+      toast({ title: "Signed Out", description: "See you next time!" });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    } catch {}
   };
 
+  // ── Loading ──
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="h-8 bg-gray-200 rounded animate-pulse" />
-          <div className="h-64 bg-gray-200 rounded animate-pulse" />
-        </div>
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+        <div className="h-8 rounded-lg animate-pulse" style={{ background: "rgba(255,255,255,0.05)" }} />
+        <div className="h-64 rounded-lg animate-pulse" style={{ background: "rgba(255,255,255,0.05)" }} />
       </div>
     );
   }
 
+  // ── Unauthenticated ──
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 p-6">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          <div className="space-y-4">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
-              Join Crabby Crew!
-            </h1>
-            <p className="text-lg text-gray-600">
-              Create a profile to save your progress, compete with friends, and customize your avatar.
-            </p>
-          </div>
-          
-          <Card className="max-w-md mx-auto shadow-lg border-2 border-blue-100">
-            <CardContent className="p-8">
-              <div className="text-6xl mb-4 text-center">🦀</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">
-                Ready to dive deeper?
-              </h3>
-              
-              {!showLogin ? (
-                <div className="space-y-4">
-                  <p className="text-gray-600 mb-6 text-center">
-                    Choose a username to get started - no email required!
-                  </p>
-                  <Button 
-                    onClick={() => setShowLogin(true)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                    size="lg"
-                  >
-                    <User className="h-5 w-5 mr-2" />
-                    Create Profile
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="text-left">
-                    <Label htmlFor="username">Choose a Username</Label>
-                    <Input
-                      id="username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="Enter your username"
-                      className="border-2 border-gray-200"
-                      maxLength={20}
-                    />
-                    <p className="text-sm text-gray-500 mt-1">
-                      At least 3 characters, no spaces or special symbols
-                    </p>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={() => handleLogin(false)}
-                      disabled={loginMutation.isPending}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Sign In
-                    </Button>
-                    <Button 
-                      onClick={() => handleLogin(true)}
-                      disabled={loginMutation.isPending}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700"
-                    >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Create New
-                    </Button>
-                  </div>
-                  
-                  <Button 
-                    onClick={() => setShowLogin(false)}
-                    variant="ghost"
-                    className="w-full"
-                    size="sm"
-                  >
-                    Back
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+      <div className="max-w-md mx-auto px-4 py-12 text-center">
+        <h1 className="section-title text-3xl mb-2">Join Crabby Crew!</h1>
+        <p className="section-subtitle mb-8">Create a profile to save progress and compete with friends.</p>
+
+        <div className="glass-card-lg p-8">
+          <div className="text-6xl mb-3">🦀</div>
+          <h3 className="font-fredoka text-white text-xl mb-4">Ready to dive deeper?</h3>
+
+          {!showLogin ? (
+            <>
+              <p className="text-white/50 text-sm mb-6">Choose a username to get started — no email required!</p>
+              <button onClick={() => setShowLogin(true)} className="cta-coral w-full font-fredoka py-3 rounded-xl flex items-center justify-center gap-2">
+                <User className="h-5 w-5" /> Create Profile
+              </button>
+            </>
+          ) : (
+            <div className="space-y-4 text-left">
+              <div>
+                <label className="text-white/70 text-sm font-semibold block mb-1">Choose a Username</label>
+                <input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your username"
+                  maxLength={20}
+                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder-white/30 focus:border-white/40 focus:outline-none"
+                />
+                <p className="text-white/30 text-xs mt-1">At least 3 characters</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { if (username.length >= 3) loginMutation.mutate({ username, createNew: false }); }}
+                  disabled={loginMutation.isPending}
+                  className="cta-glass flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1"
+                >
+                  <User className="h-4 w-4" /> Sign In
+                </button>
+                <button
+                  onClick={() => { if (username.length >= 3) loginMutation.mutate({ username, createNew: true }); }}
+                  disabled={loginMutation.isPending}
+                  className="cta-coral flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1"
+                >
+                  <UserPlus className="h-4 w-4" /> Create New
+                </button>
+              </div>
+              <button onClick={() => setShowLogin(false)} className="text-white/40 text-xs w-full text-center hover:text-white/60">Back</button>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
+  // ── Authenticated profile ──
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 p-6">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3">
-            <Settings className="h-8 w-8 text-blue-600" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
-              My Profile
-            </h1>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Settings className="h-6 w-6 text-[#7ec8c8]" />
+          <h1 className="section-title text-3xl">My Profile</h1>
+        </div>
+        <p className="section-subtitle">Customize your ocean explorer identity</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Settings */}
+        <div className="glass-card-lg p-6 space-y-6">
+          <div className="flex items-center gap-2 mb-1">
+            <User className="h-5 w-5 text-[#7ec8c8]" />
+            <h2 className="font-fredoka text-white text-lg">Profile Settings</h2>
           </div>
-          <p className="text-lg text-gray-600">
-            Customize your ocean explorer identity
-          </p>
+
+          {/* Display Name */}
+          <div>
+            <label className="text-white/70 text-sm font-semibold block mb-1">Display Name</label>
+            <input
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Enter your display name"
+              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder-white/30 focus:border-white/40 focus:outline-none"
+            />
+            <p className="text-white/30 text-xs mt-1">How others see you on leaderboards</p>
+          </div>
+
+          {/* Avatar */}
+          <div>
+            <label className="text-white/70 text-sm font-semibold block mb-2">Choose Avatar</label>
+            <div className="grid grid-cols-5 gap-2">
+              {availableAvatars.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => setSelectedAvatar(emoji)}
+                  className={`text-2xl p-2.5 rounded-lg border transition-all hover:scale-110 ${
+                    selectedAvatar === emoji
+                      ? "border-[#ff6b4a] bg-[#ff6b4a]/10 scale-105"
+                      : "border-white/10 bg-white/5 hover:border-white/20"
+                  }`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Account Info */}
+          <div className="pt-4 border-t border-white/10 space-y-2 text-sm">
+            <h4 className="text-white font-semibold">Account Info</h4>
+            <div className="text-white/50"><span className="text-white/70">Username:</span> {(user as any)?.username}</div>
+            <div className="text-white/50">
+              <span className="text-white/70">Member since:</span>{" "}
+              {(user as any)?.createdAt ? new Date((user as any).createdAt).toLocaleDateString() : "Unknown"}
+            </div>
+            <div className="text-white/50 flex items-center gap-1">
+              <span className="text-white/70">Status:</span>
+              <span className="w-2 h-2 bg-[#7ec8c8] rounded-full inline-block" /> Online
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => updateProfileMutation.mutate({ displayName, avatarEmoji: selectedAvatar })}
+              disabled={updateProfileMutation.isPending}
+              className="cta-coral flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5"
+            >
+              <Save className="h-4 w-4" /> {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="cta-glass py-2.5 px-4 rounded-xl text-sm font-semibold flex items-center gap-1.5 text-red-300 border-red-400/20 hover:bg-red-400/10"
+            >
+              <LogOut className="h-4 w-4" /> Out
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Profile Settings */}
-          <Card className="shadow-lg border-2 border-blue-100">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-blue-600" />
-                Profile Settings
-              </CardTitle>
-              <CardDescription>
-                Customize how you appear to other ocean explorers
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Display Name */}
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name</Label>
-                <Input
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Enter your display name"
-                  className="border-2 border-gray-200"
-                />
-                <p className="text-sm text-gray-500">
-                  This is how other users will see you on leaderboards
-                </p>
-              </div>
-
-              {/* Avatar Selection */}
-              <div className="space-y-4">
-                <Label>Choose Your Avatar</Label>
-                <div className="grid grid-cols-5 gap-3">
-                  {availableAvatars.map((emoji) => (
-                    <button
-                      key={emoji}
-                      onClick={() => setSelectedAvatar(emoji)}
-                      className={`text-3xl p-3 rounded-lg border-2 transition-all hover:scale-110 ${
-                        selectedAvatar === emoji
-                          ? "border-blue-500 bg-blue-50 scale-105"
-                          : "border-gray-200 hover:border-blue-300"
-                      }`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
+        {/* Stats & Badges */}
+        <div className="space-y-6">
+          <div className="glass-card p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Crown className="h-5 w-5 text-[#f5e6c8]" />
+              <h3 className="font-fredoka text-white text-base">Explorer Stats</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { val: progress?.totalXp || 0, label: "Total XP", color: "#7ec8c8" },
+                { val: progress?.level || 1, label: "Level", color: "#ff6b4a" },
+                { val: progress?.learnedSpecies?.length || 0, label: "Species", color: "#f5e6c8" },
+                { val: progress?.currentStreak || 0, label: "Streak", color: "#7ec8c8" },
+              ].map((s) => (
+                <div key={s.label} className="text-center p-3 rounded-lg bg-white/5">
+                  <div className="text-xl font-bold" style={{ color: s.color }}>{s.val}</div>
+                  <div className="text-white/40 text-xs">{s.label}</div>
                 </div>
-                <p className="text-sm text-gray-500">
-                  Pick an emoji that represents your ocean explorer personality
-                </p>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-card p-5">
+            <h3 className="font-fredoka text-white text-base mb-3">Your Badges</h3>
+            {progress?.badges && progress.badges.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {progress.badges.map((badgeId: string) => (
+                  <span key={badgeId} className="text-xs font-semibold px-3 py-1 rounded-full bg-[#ff6b4a]/15 text-[#ff6b4a]">
+                    {badgeId.replace(/-/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                  </span>
+                ))}
               </div>
-
-              {/* Account Info (Read-only) */}
-              <div className="space-y-4 pt-4 border-t border-gray-200">
-                <h4 className="font-semibold text-gray-900">Account Information</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div>
-                    <span className="font-medium">Username:</span> {(user as any)?.username}
-                  </div>
-                  <div>
-                    <span className="font-medium">Member since:</span> {
-                      (user as any)?.createdAt ? new Date((user as any).createdAt).toLocaleDateString() : "Unknown"
-                    }
-                  </div>
-                  <div>
-                    <span className="font-medium">Status:</span> 
-                    <span className="ml-2 inline-flex items-center gap-1">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      Online
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4">
-                <Button 
-                  onClick={handleSaveProfile}
-                  disabled={updateProfileMutation.isPending}
-                  className="flex-1"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={handleLogout}
-                  className="border-red-200 text-red-600 hover:bg-red-50"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Stats & Achievements */}
-          <div className="space-y-6">
-            {/* Stats Card */}
-            <Card className="shadow-lg border-2 border-green-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-yellow-600" />
-                  Your Ocean Explorer Stats
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {progress?.totalXp || 0}
-                    </div>
-                    <div className="text-sm text-blue-700">Total XP</div>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      {progress?.level || 1}
-                    </div>
-                    <div className="text-sm text-green-700">Current Level</div>
-                  </div>
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {progress?.learnedSpecies?.length || 0}
-                    </div>
-                    <div className="text-sm text-purple-700">Species Learned</div>
-                  </div>
-                  <div className="text-center p-4 bg-orange-50 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600">
-                      {progress?.currentStreak || 0}
-                    </div>
-                    <div className="text-sm text-orange-700">Day Streak</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Badges */}
-            <Card className="shadow-lg border-2 border-purple-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Badge className="h-5 w-5 text-purple-600" />
-                  Your Badges
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {progress?.badges && progress.badges.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {progress.badges.map((badgeId) => (
-                      <Badge key={badgeId} variant="secondary" className="bg-purple-100 text-purple-800">
-                        {badgeId.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-4">
-                    No badges earned yet. Start learning to unlock achievements!
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            ) : (
+              <p className="text-white/40 text-center py-4 text-sm">No badges yet. Start learning to unlock achievements!</p>
+            )}
           </div>
         </div>
       </div>

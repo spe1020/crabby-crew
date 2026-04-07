@@ -5,10 +5,7 @@ import { useGameProgress } from "@/hooks/use-game-progress";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Play, CheckCircle, Clock, Star, Video, Award } from "lucide-react";
+import { Play, CheckCircle, Clock, Star, Award } from "lucide-react";
 
 interface VideoContent {
   id: string;
@@ -23,18 +20,12 @@ interface VideoContent {
   tags: string[];
 }
 
-// TODO: Replace VIDEO_ID_HERE with actual YouTube video IDs
-// To add a real video:
-// 1. Find the YouTube video you want to embed
-// 2. Copy the video ID from the URL (e.g., for https://www.youtube.com/watch?v=dQw4w9WgXcQ, the ID is "dQw4w9WgXcQ")
-// 3. Replace VIDEO_ID_HERE with the actual ID
-// 4. Update the title, description, and other metadata to match the actual video content
 const videoLibrary: VideoContent[] = [
   {
     id: "crab-basics-intro",
     title: "Introduction to Crabs: Amazing Ocean Creatures",
     description: "Discover the fascinating world of crabs! Learn about their anatomy, behavior, and why they're such important ocean animals.",
-    videoUrl: "https://www.youtube.com/embed/zpjklLt1qWk", // Real YouTube video ID
+    videoUrl: "https://www.youtube.com/embed/zpjklLt1qWk",
     thumbnail: "🦀",
     duration: "5:23",
     xpReward: 50,
@@ -46,7 +37,7 @@ const videoLibrary: VideoContent[] = [
     id: "crab-habitats",
     title: "Where Do Crabs Live? Exploring Their Homes",
     description: "From sandy beaches to deep ocean floors, explore the diverse habitats where crabs make their homes.",
-    videoUrl: "https://www.youtube.com/embed/85lFKu_IwCA", // Real YouTube video ID
+    videoUrl: "https://www.youtube.com/embed/85lFKu_IwCA",
     thumbnail: "🏖️",
     duration: "4:15",
     xpReward: 40,
@@ -58,7 +49,7 @@ const videoLibrary: VideoContent[] = [
     id: "crab-anatomy-deep-dive",
     title: "Crab Anatomy: A Closer Look",
     description: "Take a detailed look at crab anatomy and understand how their bodies are perfectly adapted for ocean life.",
-    videoUrl: "https://www.youtube.com/embed/6oaEF7Kq_64", // Real YouTube video ID
+    videoUrl: "https://www.youtube.com/embed/6oaEF7Kq_64",
     thumbnail: "🔬",
     duration: "6:42",
     xpReward: 60,
@@ -70,7 +61,7 @@ const videoLibrary: VideoContent[] = [
     id: "crab-behavior",
     title: "Crab Behavior: How They Think and Act",
     description: "Learn about crab intelligence, social behavior, and how they communicate with each other.",
-    videoUrl: "https://www.youtube.com/embed/jNQXAC9IVRw", // Real YouTube video ID
+    videoUrl: "https://www.youtube.com/embed/jNQXAC9IVRw",
     thumbnail: "🧠",
     duration: "7:18",
     xpReward: 70,
@@ -86,12 +77,10 @@ export default function Videos() {
   const { data: progress } = useGameProgress();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [selectedVideo, setSelectedVideo] = useState<VideoContent | null>(null);
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set());
-  const [videoProgress, setVideoProgress] = useState<Record<string, number>>({});
 
-  // Load watched videos from progress
   useEffect(() => {
     if (progress?.watchedVideos) {
       setWatchedVideos(new Set(progress.watchedVideos));
@@ -102,7 +91,7 @@ export default function Videos() {
     mutationFn: async (videoId: string) => {
       return await apiRequest("/api/video-complete", "POST", { videoId });
     },
-    onSuccess: (data, videoId) => {
+    onSuccess: (_data, videoId) => {
       const video = videoLibrary.find(v => v.id === videoId);
       if (video) {
         setWatchedVideos(prev => new Set(Array.from(prev).concat(videoId)));
@@ -114,292 +103,187 @@ export default function Videos() {
       }
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to mark video as complete. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to mark video as complete.", variant: "destructive" });
     },
   });
 
-  const handleVideoComplete = (videoId: string) => {
-    if (!watchedVideos.has(videoId)) {
-      markVideoComplete.mutate(videoId);
-    }
+  const diffBadge = (d: string) => {
+    if (d === 'beginner') return 'bg-[#7ec8c8]/20 text-[#7ec8c8]';
+    if (d === 'intermediate') return 'bg-[#f5e6c8]/20 text-[#f5e6c8]';
+    return 'bg-[#ff6b4a]/20 text-[#ff6b4a]';
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner': return 'bg-green-100 text-green-800';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      'Crab Basics': 'bg-ocean-100 text-ocean-800',
-      'Habitats': 'bg-sunny-100 text-sunny-800',
-      'Anatomy': 'bg-coral-100 text-coral-800',
-      'Behavior': 'bg-purple-100 text-purple-800'
-    };
-    return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-  };
-
+  // ── Unauthenticated ──
   if (!isAuthenticated) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h2 className="text-4xl font-fredoka text-gray-600 mb-4">📹 Educational Videos 📹</h2>
-          <p className="text-xl text-gray-500">Watch amazing crab videos and earn XP!</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-ocean-50 to-ocean-100 rounded-3xl p-12 text-center shadow-xl">
-          <div className="text-8xl mb-6 animate-bounce-gentle">🔒</div>
-          <h3 className="text-3xl font-bold text-gray-700 mb-4">Sign In to Watch Videos</h3>
-          <p className="text-xl text-gray-600 mb-8">Create an account to access our video library and start earning XP!</p>
-          
+      <div className="max-w-4xl mx-auto px-4 py-8 text-center">
+        <h2 className="section-title text-3xl sm:text-4xl mb-3">📹 Educational Videos</h2>
+        <p className="section-subtitle text-lg mb-10">Watch amazing crab videos and earn XP!</p>
+        <div className="glass-card-lg p-12">
+          <div className="text-7xl mb-4">🔒</div>
+          <h3 className="font-fredoka text-white text-2xl mb-3">Sign In to Watch Videos</h3>
+          <p className="text-white/60 mb-6">Create an account to access our video library and start earning XP!</p>
           <Link href="/login">
-            <Button className="bg-ocean-500 hover:bg-ocean-600 text-white px-8 py-4 rounded-full text-xl font-bold transition-colors shadow-lg">
-              🚀 Start Learning
-            </Button>
+            <button className="cta-coral font-fredoka px-8 py-3 rounded-full text-base">🚀 Start Learning</button>
           </Link>
         </div>
       </div>
     );
   }
 
+  // ── Video player view ──
   if (selectedVideo) {
+    const isWatched = watchedVideos.has(selectedVideo.id);
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Video Player */}
-        <div className="mb-8">
-          <div className="relative">
-            <iframe
-              src={selectedVideo.videoUrl}
-              title={selectedVideo.title}
-              className="w-full aspect-video rounded-2xl shadow-2xl"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-            {watchedVideos.has(selectedVideo.id) && (
-              <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Completed
+        {/* Player */}
+        <div className="relative mb-8">
+          <iframe
+            src={selectedVideo.videoUrl}
+            title={selectedVideo.title}
+            className="w-full aspect-video rounded-2xl shadow-2xl"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+          {isWatched && (
+            <div className="absolute top-4 right-4 bg-[#7ec8c8] text-[#062a3e] px-3 py-1 rounded-full flex items-center gap-1 text-sm font-semibold">
+              <CheckCircle className="h-4 w-4" /> Completed
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Info */}
+          <div className="lg:col-span-2 glass-card p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h1 className="text-2xl font-bold text-white mb-2">{selectedVideo.title}</h1>
+                <p className="text-white/60">{selectedVideo.description}</p>
+              </div>
+              <div className="text-right flex-shrink-0 ml-4">
+                <div className="text-xl font-bold text-[#ff6b4a]">{selectedVideo.xpReward} XP</div>
+                <div className="text-white/40 text-xs">Reward</div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-6">
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${diffBadge(selectedVideo.difficulty)}`}>
+                {selectedVideo.difficulty}
+              </span>
+              {selectedVideo.tags.map(tag => (
+                <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-white/5 text-white/50">#{tag}</span>
+              ))}
+            </div>
+
+            {!isWatched ? (
+              <button
+                onClick={() => markVideoComplete.mutate(selectedVideo.id)}
+                disabled={markVideoComplete.isPending}
+                className="cta-coral w-full font-fredoka py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-40"
+              >
+                <CheckCircle className="h-5 w-5" />
+                {markVideoComplete.isPending ? "Marking..." : `Mark Complete & Earn ${selectedVideo.xpReward} XP`}
+              </button>
+            ) : (
+              <div className="text-center py-4 rounded-xl" style={{ background: "rgba(126,200,200,0.1)", border: "1px solid rgba(126,200,200,0.2)" }}>
+                <CheckCircle className="h-7 w-7 text-[#7ec8c8] mx-auto mb-1" />
+                <p className="text-[#7ec8c8] font-semibold text-sm">Completed — you earned {selectedVideo.xpReward} XP</p>
               </div>
             )}
           </div>
-        </div>
 
-        {/* Video Info */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-3xl p-6 shadow-xl border-2 border-ocean-100">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-800 mb-2">{selectedVideo.title}</h1>
-                  <p className="text-gray-600 text-lg">{selectedVideo.description}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-ocean-600">{selectedVideo.xpReward} XP</div>
-                  <div className="text-sm text-gray-500">Reward</div>
-                </div>
+          {/* Sidebar stats */}
+          <div className="space-y-4">
+            <div className="glass-card p-5">
+              <div className="flex items-center gap-2 text-white/70 mb-2"><Clock className="h-4 w-4" /> Duration</div>
+              <div className="text-2xl font-bold text-white">{selectedVideo.duration}</div>
+            </div>
+            <div className="glass-card p-5">
+              <div className="flex items-center gap-2 text-white/70 mb-2"><Star className="h-4 w-4" /> Progress</div>
+              <div className="text-2xl font-bold text-white mb-1">{watchedVideos.size} / {videoLibrary.length}</div>
+              <div className="progress-track h-2">
+                <div className="progress-fill h-2" style={{ width: `${(watchedVideos.size / videoLibrary.length) * 100}%` }} />
               </div>
-              
-              <div className="flex flex-wrap gap-2 mb-6">
-                <Badge className={getDifficultyColor(selectedVideo.difficulty)}>
-                  {selectedVideo.difficulty.charAt(0).toUpperCase() + selectedVideo.difficulty.slice(1)}
-                </Badge>
-                <Badge className={getCategoryColor(selectedVideo.category)}>
-                  {selectedVideo.category}
-                </Badge>
-                {selectedVideo.tags.map(tag => (
-                  <Badge key={tag} variant="outline" className="bg-gray-50">
-                    #{tag}
-                  </Badge>
-                ))}
-              </div>
-
-              {!watchedVideos.has(selectedVideo.id) ? (
-                <Button 
-                  onClick={() => handleVideoComplete(selectedVideo.id)}
-                  disabled={markVideoComplete.isPending}
-                  className="w-full bg-ocean-500 hover:bg-ocean-600 text-white py-3 text-lg font-bold"
-                >
-                  {markVideoComplete.isPending ? (
-                    "Marking Complete..."
-                  ) : (
-                    <>
-                      <CheckCircle className="h-5 w-5 mr-2" />
-                      Mark as Complete & Earn {selectedVideo.xpReward} XP
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <div className="text-center py-4 bg-green-50 rounded-2xl border-2 border-green-200">
-                  <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <p className="text-green-800 font-semibold">Video Completed!</p>
-                  <p className="text-green-600">You earned {selectedVideo.xpReward} XP</p>
-                </div>
-              )}
             </div>
           </div>
-
-          {/* Video Stats */}
-          <div className="space-y-4">
-            <Card className="border-2 border-ocean-100">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Clock className="h-5 w-5 text-ocean-600" />
-                  Duration
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-ocean-600">{selectedVideo.duration}</div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-sunny-100">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Star className="h-5 w-5 text-sunny-600" />
-                  Your Progress
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-sunny-600">
-                    {watchedVideos.size} / {videoLibrary.length}
-                  </div>
-                  <div className="text-sm text-gray-500">Videos Watched</div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div 
-                      className="bg-sunny-500 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${(watchedVideos.size / videoLibrary.length) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
-        {/* Back Button */}
         <div className="text-center mt-8">
-          <Button 
-            onClick={() => setSelectedVideo(null)}
-            variant="outline"
-            className="bg-white border-2 border-ocean-200 text-ocean-600 hover:bg-ocean-50 px-8 py-3 rounded-full text-lg font-semibold"
-          >
+          <button onClick={() => setSelectedVideo(null)} className="cta-glass font-semibold px-8 py-3 rounded-full">
             ← Back to Video Library
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
 
+  // ── Library view ──
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
-        <h2 className="text-4xl font-fredoka text-ocean-600 mb-4">📹 Educational Video Library 📹</h2>
-        <p className="text-xl text-gray-600">Watch amazing crab videos and earn XP for your ocean knowledge!</p>
+        <h2 className="section-title text-3xl sm:text-4xl mb-3">📹 Video Library</h2>
+        <p className="section-subtitle text-lg">Watch amazing crab videos and earn XP!</p>
       </div>
 
-      {/* Progress Overview */}
-      <div className="bg-gradient-to-r from-ocean-400 to-ocean-600 rounded-3xl p-6 text-white shadow-2xl mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+      {/* Overview stats */}
+      <div className="glass-card-lg p-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+          <div><div className="text-2xl font-bold text-white">{videoLibrary.length}</div><div className="text-white/50 text-xs">Total Videos</div></div>
+          <div><div className="text-2xl font-bold text-white">{watchedVideos.size}</div><div className="text-white/50 text-xs">Watched</div></div>
           <div>
-            <div className="text-3xl font-bold">{videoLibrary.length}</div>
-            <div className="text-ocean-100">Total Videos</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold">{watchedVideos.size}</div>
-            <div className="text-ocean-100">Videos Watched</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold">
-              {videoLibrary.reduce((total, video) => 
-                watchedVideos.has(video.id) ? total + video.xpReward : total, 0
-              )}
+            <div className="text-2xl font-bold text-white">
+              {videoLibrary.reduce((t, v) => watchedVideos.has(v.id) ? t + v.xpReward : t, 0)}
             </div>
-            <div className="text-ocean-100">XP Earned</div>
+            <div className="text-white/50 text-xs">XP Earned</div>
           </div>
           <div>
-            <div className="text-3xl font-bold">
-              {Math.round((watchedVideos.size / videoLibrary.length) * 100)}%
-            </div>
-            <div className="text-ocean-100">Completion</div>
+            <div className="text-2xl font-bold text-white">{Math.round((watchedVideos.size / videoLibrary.length) * 100)}%</div>
+            <div className="text-white/50 text-xs">Complete</div>
           </div>
         </div>
       </div>
 
-      {/* Video Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      {/* Video cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
         {videoLibrary.map((video) => {
           const isWatched = watchedVideos.has(video.id);
           return (
-            <Card 
-              key={video.id} 
-              className={`cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl border-2 ${
-                isWatched ? 'border-green-200 bg-green-50' : 'border-ocean-100 hover:border-ocean-300'
-              }`}
+            <div
+              key={video.id}
+              className={`glass-card p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1.5 ${isWatched ? 'ring-1 ring-[#7ec8c8]/30' : ''}`}
               onClick={() => setSelectedVideo(video)}
             >
-              <CardHeader className="pb-3">
-                <div className="relative">
-                  <div className="text-6xl mb-3 text-center">{video.thumbnail}</div>
-                  {isWatched && (
-                    <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full">
-                      <CheckCircle className="h-4 w-4" />
-                    </div>
-                  )}
-                  <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
-                    {video.duration}
+              <div className="relative mb-3">
+                <div className="text-5xl text-center">{video.thumbnail}</div>
+                {isWatched && (
+                  <div className="absolute top-1 right-1 bg-[#7ec8c8] text-[#062a3e] p-1 rounded-full">
+                    <CheckCircle className="h-3.5 w-3.5" />
                   </div>
+                )}
+                <div className="absolute bottom-0 left-0 bg-black/50 text-white text-xs px-2 py-0.5 rounded">{video.duration}</div>
+              </div>
+              <h3 className="text-white font-semibold text-sm mb-1 line-clamp-2">{video.title}</h3>
+              <p className="text-white/40 text-xs mb-3 line-clamp-2">{video.description}</p>
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${diffBadge(video.difficulty)}`}>{video.difficulty}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-[#ff6b4a] text-xs font-semibold">
+                  <Award className="h-3.5 w-3.5" /> {video.xpReward} XP
                 </div>
-                <CardTitle className="text-lg text-center">{video.title}</CardTitle>
-                <CardDescription className="text-center text-sm">
-                  {video.description.substring(0, 80)}...
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge className={getDifficultyColor(video.difficulty)}>
-                    {video.difficulty}
-                  </Badge>
-                  <Badge className={getCategoryColor(video.category)}>
-                    {video.category}
-                  </Badge>
+                <div className="flex items-center gap-1 text-white/50 text-xs">
+                  <Play className="h-3.5 w-3.5" /> Watch
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-ocean-600 font-semibold">
-                    <Award className="h-4 w-4" />
-                    {video.xpReward} XP
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="border-ocean-200 text-ocean-600 hover:bg-ocean-50"
-                  >
-                    <Play className="h-4 w-4 mr-1" />
-                    Watch
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })}
       </div>
 
-      {/* Back to Home */}
       <div className="text-center">
         <Link href="/">
-          <Button className="bg-ocean-500 hover:bg-ocean-600 text-white px-8 py-4 rounded-full text-xl font-bold transition-colors shadow-lg">
-            🏠 Back to Home
-          </Button>
+          <button className="cta-glass font-semibold px-8 py-3 rounded-full">🏠 Back to Home</button>
         </Link>
       </div>
     </div>

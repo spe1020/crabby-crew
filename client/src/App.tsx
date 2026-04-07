@@ -40,7 +40,7 @@ function App() {
 
   return (
     <TooltipProvider>
-      <div className={showAppChrome ? "min-h-screen bg-gradient-to-br from-ocean-50 to-ocean-100 pb-20" : ""}>
+      <div className={showAppChrome ? "app-bg pb-20" : ""}>
         {showAppChrome && <Navigation />}
         <Router />
         {showAppChrome && <BottomNavigation />}
