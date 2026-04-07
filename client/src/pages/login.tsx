@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { queryClient } from "@/lib/queryClient";
@@ -12,13 +12,13 @@ export default function Login() {
   const { user } = useAuth();
 
   // Redirect if already logged in
-  if (user) {
-    setLocation("/");
-    return null;
-  }
+  useEffect(() => {
+    if (user) setLocation("/");
+  }, [user, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading || username.trim().length < 3) return;
     setIsLoading(true);
     setError("");
 
@@ -33,20 +33,22 @@ export default function Login() {
       if (response.ok) {
         await response.json();
         await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-        setLocation("/");
+        // Redirect happens via the useEffect above once user state updates
       } else {
         const errorData = await response.json();
         setError(errorData.message || "Login failed");
+        setIsLoading(false);
       }
     } catch {
       setError("Network error. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };
 
+  if (user) return null;
+
   return (
-    <div className="landing-bg flex items-center justify-center px-4">
+    <div className="landing-bg min-h-screen flex items-center justify-center px-4">
       <Bubbles count={12} />
 
       <div className="relative z-10 w-full max-w-sm fade-in-up" style={{ animationDelay: "0.15s" }}>
@@ -87,6 +89,7 @@ export default function Login() {
                 minLength={3}
                 maxLength={20}
                 disabled={isLoading}
+                autoFocus
               />
               <p className="text-white/40 text-xs mt-2">
                 This will be your explorer name in the ocean adventure!
