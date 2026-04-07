@@ -31,9 +31,10 @@ export default function Login() {
       });
 
       if (response.ok) {
-        await response.json();
-        await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-        // Redirect happens via the useEffect above once user state updates
+        const data = await response.json();
+        // Set user directly in cache — no refetch needed
+        queryClient.setQueryData(["/api/auth/user"], data.user);
+        setLocation("/");
       } else {
         const errorData = await response.json();
         setError(errorData.message || "Login failed");
