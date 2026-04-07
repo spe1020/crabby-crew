@@ -1,20 +1,18 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { queryClient } from "@/lib/queryClient";
 import Bubbles from "@/components/landing/Bubbles";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [, setLocation] = useLocation();
   const { user } = useAuth();
 
   // Redirect if already logged in
-  useEffect(() => {
-    if (user) setLocation("/");
-  }, [user, setLocation]);
+  if (user) {
+    window.location.href = "/";
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,10 +29,10 @@ export default function Login() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        // Set user directly in cache — no refetch needed
-        queryClient.setQueryData(["/api/auth/user"], data.user);
-        setLocation("/");
+        await response.json();
+        // Hard navigate so the page loads fresh with the session cookie set
+        window.location.href = "/";
+        return;
       } else {
         const errorData = await response.json();
         setError(errorData.message || "Login failed");
