@@ -1,6 +1,7 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
 import BottomNavigation from "@/components/bottom-navigation";
@@ -30,12 +31,19 @@ function Router() {
 }
 
 function App() {
+  const { isAuthenticated } = useAuth();
+  const [location] = useLocation();
+
+  // Hide app chrome on landing page and login page for unauthenticated users
+  const isLandingOrLogin = location === "/" || location === "/login";
+  const showAppChrome = isAuthenticated || !isLandingOrLogin;
+
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-ocean-50 to-ocean-100 pb-20">
-        <Navigation />
+      <div className={showAppChrome ? "min-h-screen bg-gradient-to-br from-ocean-50 to-ocean-100 pb-20" : ""}>
+        {showAppChrome && <Navigation />}
         <Router />
-        <BottomNavigation />
+        {showAppChrome && <BottomNavigation />}
         <Toaster />
       </div>
     </TooltipProvider>

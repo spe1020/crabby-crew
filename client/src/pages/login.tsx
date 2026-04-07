@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { queryClient } from "@/lib/queryClient";
+import Bubbles from "@/components/landing/Bubbles";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -24,31 +25,20 @@ export default function Login() {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: username.trim(),
-          createNew: true, // Allow creating new users
-        }),
-        credentials: "include", // Important for sessions
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), createNew: true }),
+        credentials: "include",
       });
 
       if (response.ok) {
-        const data = await response.json();
-        console.log("Login successful:", data);
-        
-        // Invalidate and refetch the auth query to update the UI
+        await response.json();
         await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-        
-        // Redirect to home page
         setLocation("/");
       } else {
         const errorData = await response.json();
         setError(errorData.message || "Login failed");
       }
-    } catch (err) {
-      console.error("Login error:", err);
+    } catch {
       setError("Network error. Please try again.");
     } finally {
       setIsLoading(false);
@@ -56,24 +46,34 @@ export default function Login() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-ocean-50 to-ocean-100 px-4">
-      <div className="max-w-md w-full">
-        {/* Header */}
+    <div className="landing-bg flex items-center justify-center px-4">
+      <Bubbles count={12} />
+
+      <div className="relative z-10 w-full max-w-sm fade-in-up" style={{ animationDelay: "0.15s" }}>
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="text-8xl mb-4 animate-bounce-gentle">🦀</div>
-          <h1 className="text-4xl font-fredoka text-ocean-600 mb-2">Crabby Crew</h1>
-          <p className="text-ocean-500 text-lg">Ocean Learning Adventure</p>
+          <div className="text-7xl landing-crab mb-3">🦀</div>
+          <h1 className="font-fredoka text-white text-3xl">Crabby Crew</h1>
+          <p className="text-white/60 text-sm mt-1">Ocean Learning Adventure</p>
         </div>
 
-        {/* Login Form */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 border-4 border-ocean-200">
-          <h2 className="text-2xl font-bold text-center text-ocean-600 mb-6">
-            Welcome, Ocean Explorer!
+        {/* Form card */}
+        <div
+          className="rounded-2xl p-7"
+          style={{
+            background: "rgba(255,255,255,0.08)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
+            border: "1px solid rgba(255,255,255,0.12)",
+          }}
+        >
+          <h2 className="font-fredoka text-white text-xl text-center mb-5">
+            Welcome, Explorer!
           </h2>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-ocean-700 mb-2">
+              <label htmlFor="username" className="block text-white/70 text-sm font-semibold mb-2">
                 Choose Your Explorer Name
               </label>
               <input
@@ -82,52 +82,44 @@ export default function Login() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your name..."
-                className="w-full px-4 py-3 border-2 border-ocean-200 rounded-2xl focus:border-ocean-400 focus:outline-none transition-colors text-lg"
+                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder-white/40 focus:border-white/40 focus:outline-none transition-colors text-base"
                 required
                 minLength={3}
                 maxLength={20}
                 disabled={isLoading}
               />
-              <p className="text-sm text-ocean-500 mt-2">
+              <p className="text-white/40 text-xs mt-2">
                 This will be your explorer name in the ocean adventure!
               </p>
             </div>
 
             {error && (
-              <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4">
-                <p className="text-red-600 text-center">{error}</p>
+              <div className="rounded-xl p-3" style={{ background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.3)" }}>
+                <p className="text-red-300 text-center text-sm">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isLoading || username.trim().length < 3}
-              className="w-full bg-gradient-to-r from-ocean-500 to-ocean-600 text-white font-bold py-4 px-6 rounded-2xl text-lg hover:from-ocean-600 hover:to-ocean-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="cta-coral w-full font-fredoka py-3.5 rounded-xl text-base disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
+                <span className="flex items-center justify-center gap-2">
+                  <span className="inline-block h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                   Starting Adventure...
-                </div>
+                </span>
               ) : (
-                "Start Your Ocean Adventure! 🌊"
+                "Start Your Ocean Adventure 🌊"
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-ocean-500">
-              Don't worry about passwords - just pick a name and start exploring!
-            </p>
-          </div>
+          <p className="text-white/30 text-xs text-center mt-5">
+            No password needed — just pick a name and start exploring!
+          </p>
         </div>
-
-        {/* Ocean-themed decorative elements */}
-        <div className="absolute top-10 left-10 text-4xl animate-float opacity-60">🐠</div>
-        <div className="absolute top-20 right-10 text-3xl animate-bubble opacity-50">🫧</div>
-        <div className="absolute bottom-20 left-20 text-3xl animate-float opacity-40" style={{animationDelay: '1s'}}>🌊</div>
-        <div className="absolute bottom-10 right-20 text-4xl animate-bubble opacity-60" style={{animationDelay: '2s'}}>🦐</div>
       </div>
-    </main>
+    </div>
   );
 }

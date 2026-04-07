@@ -11,16 +11,6 @@ export function useAuth() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  console.log("useAuth hook:", { 
-    user, 
-    isLoading, 
-    error, 
-    isAuthenticated: !!user,
-    userType: typeof user,
-    userKeys: user ? Object.keys(user) : null,
-    errorMessage: error?.message
-  });
-
   const logoutMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch("/api/auth/logout", {

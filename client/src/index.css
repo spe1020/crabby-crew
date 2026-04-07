@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Fredoka+One:wght@400&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -36,11 +35,18 @@
   --sidebar-accent-foreground: hsl(203.8863, 88.2845%, 53.1373%);
   --sidebar-border: hsl(205.0000, 25.0000%, 90.5882%);
   --sidebar-ring: hsl(202.8169, 89.1213%, 53.1373%);
-  --font-sans: 'Quicksand', sans-serif;
+  --font-sans: 'Nunito', sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --font-fredoka: 'Fredoka One', cursive;
   --radius: 1.3rem;
+
+  /* Landing page palette */
+  --deep-sea: #062a3e;
+  --ocean-main: #0a4d6e;
+  --coral-main: #ff6b4a;
+  --seafoam: #7ec8c8;
+  --sand: #f5e6c8;
   
   /* Ocean theme colors */
   --ocean-50: hsl(202, 100%, 97%);
@@ -199,9 +205,13 @@
     @apply font-sans antialiased bg-gradient-to-br from-ocean-50 to-ocean-100 text-foreground min-h-screen;
     font-family: var(--font-sans);
   }
-  
+
   .font-fredoka {
     font-family: var(--font-fredoka);
+  }
+
+  .font-nunito {
+    font-family: 'Nunito', sans-serif;
   }
 }
 
@@ -209,15 +219,15 @@
   .animate-float {
     animation: float 3s ease-in-out infinite;
   }
-  
+
   .animate-bubble {
     animation: bubble 4s ease-in-out infinite;
   }
-  
+
   .animate-bounce-gentle {
     animation: bounceGentle 2s ease-in-out infinite;
   }
-  
+
   .wave-bg {
     background: linear-gradient(45deg, var(--ocean-500), var(--ocean-400), var(--ocean-300));
     background-size: 400% 400%;
@@ -243,6 +253,124 @@
 @keyframes gradientShift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
+}
+
+/* ───── Landing page ───── */
+
+.landing-bg {
+  background: linear-gradient(170deg, #062a3e 0%, #0a4d6e 40%, #1a8a9e 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ambient floating bubbles */
+@keyframes bubbleRise {
+  0%   { transform: translateY(0) scale(1);   opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(-100vh) scale(0.4); opacity: 0; }
+}
+
+.landing-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(126,200,200,0.25), rgba(126,200,200,0.05));
+  pointer-events: none;
+  animation: bubbleRise linear infinite;
+}
+
+/* Crab wave animation */
+@keyframes crabWave {
+  0%, 100% { transform: rotate(0deg); }
+  15%      { transform: rotate(14deg); }
+  30%      { transform: rotate(-8deg); }
+  45%      { transform: rotate(10deg); }
+  60%      { transform: rotate(-4deg); }
+  75%      { transform: rotate(6deg); }
+  90%      { transform: rotate(0deg); }
+}
+
+.landing-crab {
+  display: inline-block;
+  animation: crabWave 2.5s ease-in-out infinite;
+  transform-origin: 70% 80%;
+}
+
+/* Staggered fade-in */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 0.7s ease-out forwards;
+}
+
+/* Coral glow CTA */
+.cta-coral {
+  background: #ff6b4a;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(255, 107, 74, 0.45), 0 4px 14px rgba(0,0,0,0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-coral:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 30px rgba(255, 107, 74, 0.6), 0 6px 20px rgba(0,0,0,0.25);
+}
+
+/* Frosted glass CTA */
+.cta-glass {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.9);
+  transition: background 0.2s, transform 0.2s;
+}
+.cta-glass:hover {
+  background: rgba(255,255,255,0.18);
+  transform: translateY(-2px);
+}
+
+/* Feature tile */
+.feature-tile {
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 1.25rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  cursor: pointer;
+}
+.feature-tile:hover {
+  transform: translateY(-6px) scale(1.02);
+}
+.feature-tile[data-theme="learn"]:hover {
+  box-shadow: 0 0 24px rgba(126,200,200,0.3);
+  border-color: rgba(126,200,200,0.5);
+}
+.feature-tile[data-theme="quests"]:hover {
+  box-shadow: 0 0 24px rgba(255,107,74,0.3);
+  border-color: rgba(255,107,74,0.5);
+}
+.feature-tile[data-theme="rewards"]:hover {
+  box-shadow: 0 0 24px rgba(245,230,200,0.35);
+  border-color: rgba(245,230,200,0.5);
+}
+.feature-tile[data-theme="leaderboard"]:hover {
+  box-shadow: 0 0 24px rgba(126,200,200,0.3);
+  border-color: rgba(126,200,200,0.5);
+}
+
+/* Why-section row */
+.why-row {
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 0.875rem;
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 /* Custom ocean theme colors for Tailwind */

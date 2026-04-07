@@ -30,7 +30,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post('/api/auth/login', async (req, res) => {
     try {
-      console.log("Login attempt:", req.body);
       const { username, createNew } = req.body;
       
       if (!username || username.length < 3) {
@@ -38,16 +37,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       let user = await storage.getUserByUsername(username);
-      console.log("Existing user found:", !!user);
       
       if (!user && createNew) {
         // Create new user
-        user = await storage.createUser({ 
+        user = await storage.createUser({
           username,
           displayName: username,
           avatarEmoji: "🦀"
         });
-        console.log("New user created:", user.id);
       } else if (!user) {
         return res.status(404).json({ message: "User not found. Try creating a new account." });
       }
@@ -55,7 +52,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set session
       (req.session as any).userId = user.id;
       activeUsers.set(req.sessionID, user.id);
-      console.log("Session set for user:", user.id, "Session ID:", req.sessionID);
       
       // Update user online status
       await storage.updateUser(user.id, { isOnline: true, lastSeen: new Date() });
@@ -69,10 +65,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/auth/user', async (req, res) => {
     try {
-      console.log("Auth check - Session ID:", req.sessionID);
-      console.log("Auth check - Session data:", req.session);
       const userId = (req.session as any)?.userId;
-      console.log("Auth check - User ID from session:", userId);
       
       if (!userId) {
         return res.status(401).json({ message: "Not authenticated" });
