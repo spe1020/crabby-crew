@@ -1,6 +1,6 @@
 import { generateSecretKey, getPublicKey, finalizeEvent } from 'nostr-tools/pure';
 import { bytesToHex, hexToBytes } from 'nostr-tools/utils';
-import { Relay } from 'nostr-tools/relay';
+import WebSocket from 'ws';
 
 const DEFAULT_RELAY = process.env.NOSTR_RELAY_URL || 'wss://relay.damus.io';
 
@@ -25,19 +25,40 @@ export function buildProfileEvent(
   );
 }
 
-export async function publishToRelay(
+/**
+ * Publish a signed event to a Nostr relay using raw WebSocket.
+ * nostr-tools' Relay class has compatibility issues with the ws library,
+ * so we use a direct WebSocket connection instead.
+ */
+export function publishToRelay(
   event: ReturnType<typeof finalizeEvent>,
   relayUrl: string = DEFAULT_RELAY,
 ): Promise<boolean> {
-  try {
-    const relay = await Relay.connect(relayUrl);
-    await relay.publish(event);
-    relay.close();
-    return true;
-  } catch (err) {
-    console.error('Nostr relay publish failed:', err);
-    return false;
-  }
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => { ws.close(); resolve(false); }, 8000);
+
+    const ws = new WebSocket(relayUrl);
+
+    ws.on('open', () => {
+      ws.send(JSON.stringify(['EVENT', event]));
+    });
+
+    ws.on('message', (data: WebSocket.Data) => {
+      try {
+        const msg = JSON.parse(data.toString());
+        if (msg[0] === 'OK') {
+          clearTimeout(timeout);
+          ws.close();
+          resolve(!!msg[2]);
+        }
+      } catch {}
+    });
+
+    ws.on('error', () => {
+      clearTimeout(timeout);
+      resolve(false);
+    });
+  });
 }
 
 /** Strip private key from a user object before sending to the client. */
