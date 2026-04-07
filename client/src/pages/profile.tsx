@@ -20,6 +20,7 @@ export default function Profile() {
 
   const [displayName, setDisplayName] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState("🦀");
+  const [bio, setBio] = useState("");
   const [username, setUsername] = useState("");
   const [showLogin, setShowLogin] = useState(false);
 
@@ -27,6 +28,7 @@ export default function Profile() {
     if (user) {
       setDisplayName((user as any).displayName || "");
       setSelectedAvatar((user as any).avatarEmoji || "🦀");
+      setBio((user as any).bio || "");
     }
   }, [user]);
 
@@ -45,7 +47,7 @@ export default function Profile() {
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: { displayName: string; avatarEmoji: string }) => {
+    mutationFn: async (data: { displayName: string; avatarEmoji: string; bio?: string }) => {
       return await apiRequest("/api/profile", "PUT", data);
     },
     onSuccess: () => {
@@ -161,6 +163,20 @@ export default function Profile() {
             <p className="text-white/30 text-xs mt-1">How others see you on leaderboards</p>
           </div>
 
+          {/* Bio */}
+          <div>
+            <label className="text-white/70 text-sm font-semibold block mb-1">About Me</label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Tell us about yourself..."
+              maxLength={160}
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder-white/30 focus:border-white/40 focus:outline-none resize-none"
+            />
+            <p className="text-white/30 text-xs mt-1">A short bio (max 160 characters)</p>
+          </div>
+
           {/* Avatar */}
           <div>
             <label className="text-white/70 text-sm font-semibold block mb-2">Choose Avatar</label>
@@ -198,7 +214,7 @@ export default function Profile() {
           {/* Actions */}
           <div className="flex gap-3 pt-2">
             <button
-              onClick={() => updateProfileMutation.mutate({ displayName, avatarEmoji: selectedAvatar })}
+              onClick={() => updateProfileMutation.mutate({ displayName, avatarEmoji: selectedAvatar, bio })}
               disabled={updateProfileMutation.isPending}
               className="cta-coral flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5"
             >

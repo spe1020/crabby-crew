@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { storage } from '../server/storage';
 import { insertQuizAttemptSchema, updateProfileSchema } from '../shared/schema';
+import { generateKeypair, buildProfileEvent, publishToRelay, stripPrivkey } from '../server/nostr';
 
 // In-memory session store (resets on cold start — acceptable for demo)
 const activeUsers = new Map<string, string>();
@@ -41,13 +42,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let user = await storage.getUserByUsername(username);
       if (!user && createNew) {
         user = await storage.createUser({ username, displayName: username, avatarEmoji: "🦀" });
+        const { privkeyHex, pubkeyHex } = generateKeypair();
+        const relayUrl = process.env.NOSTR_RELAY_URL || 'wss://relay.damus.io';
+        await storage.updateUser(user.id, { nostrPubkey: pubkeyHex, nostrPrivkey: privkeyHex, nostrRelayUrl: relayUrl });
+        const evt = buildProfileEvent(privkeyHex, { name: username, display_name: username, about: 'Crabby Crew explorer' });
+        publishToRelay(evt, relayUrl).catch(() => {});
+        user = (await storage.getUser(user.id))!;
       } else if (!user) {
         return res.status(404).json({ message: "User not found. Try creating a new account." });
       }
 
+      // Backfill Nostr identity for existing users
+      if (user && !user.nostrPubkey) {
+        const { privkeyHex, pubkeyHex } = generateKeypair();
+        const relayUrl = process.env.NOSTR_RELAY_URL || 'wss://relay.damus.io';
+        await storage.updateUser(user.id, { nostrPubkey: pubkeyHex, nostrPrivkey: privkeyHex, nostrRelayUrl: relayUrl });
+        const evt = buildProfileEvent(privkeyHex, { name: user.username, display_name: user.displayName || user.username, about: (user as any).bio || 'Crabby Crew explorer' });
+        publishToRelay(evt, relayUrl).catch(() => {});
+        user = (await storage.getUser(user.id))!;
+      }
+
       setSession(res, user.id);
       await storage.updateUser(user.id, { isOnline: true, lastSeen: new Date() });
-      return res.json({ user, message: "Login successful" });
+      return res.json({ user: stripPrivkey(user), message: "Login successful" });
     }
 
     // ── Auth: check ──
@@ -56,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
       const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ message: "User not found" });
-      return res.json(user);
+      return res.json(stripPrivkey(user));
     }
 
     // ── Auth: logout ──
@@ -76,8 +93,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const userId = getUserId(req);
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
       const data = updateProfileSchema.parse(req.body);
-      const user = await storage.updateProfile(userId, data);
-      return user ? res.json(user) : res.status(404).json({ message: "User not found" });
+      const updatedUser = await storage.updateProfile(userId, data);
+      if (!updatedUser) return res.status(404).json({ message: "User not found" });
+
+      if (updatedUser.nostrPrivkey) {
+        const evt = buildProfileEvent(updatedUser.nostrPrivkey, {
+          name: updatedUser.username,
+          display_name: updatedUser.displayName || updatedUser.username,
+          about: updatedUser.bio || 'Crabby Crew explorer',
+        });
+        publishToRelay(evt, updatedUser.nostrRelayUrl || undefined).catch(() => {});
+      }
+
+      return res.json(stripPrivkey(updatedUser));
     }
 
     // ── Progress GET ──

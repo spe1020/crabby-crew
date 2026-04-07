@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertGameProgressSchema, insertQuizAttemptSchema, updateProfileSchema, createUserSchema } from "@shared/schema";
 import session from "express-session";
+import { generateKeypair, buildProfileEvent, publishToRelay, stripPrivkey } from "./nostr";
 
 // Simple session-based auth (in-memory for demo)
 const activeUsers = new Map<string, string>(); // sessionId -> userId
@@ -37,16 +38,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       let user = await storage.getUserByUsername(username);
-      
+
       if (!user && createNew) {
-        // Create new user
-        user = await storage.createUser({
-          username,
-          displayName: username,
-          avatarEmoji: "🦀"
-        });
+        user = await storage.createUser({ username, displayName: username, avatarEmoji: "🦀" });
+
+        // Generate Nostr keypair and attach to user
+        const { privkeyHex, pubkeyHex } = generateKeypair();
+        const relayUrl = process.env.NOSTR_RELAY_URL || 'wss://relay.damus.io';
+        await storage.updateUser(user.id, { nostrPubkey: pubkeyHex, nostrPrivkey: privkeyHex, nostrRelayUrl: relayUrl });
+
+        // Publish initial profile to relay (fire-and-forget)
+        const evt = buildProfileEvent(privkeyHex, { name: username, display_name: username, about: 'Crabby Crew explorer' });
+        publishToRelay(evt, relayUrl).catch(() => {});
+
+        user = (await storage.getUser(user.id))!;
       } else if (!user) {
         return res.status(404).json({ message: "User not found. Try creating a new account." });
+      }
+
+      // Backfill Nostr identity for existing users
+      if (user && !user.nostrPubkey) {
+        const { privkeyHex, pubkeyHex } = generateKeypair();
+        const relayUrl = process.env.NOSTR_RELAY_URL || 'wss://relay.damus.io';
+        await storage.updateUser(user.id, { nostrPubkey: pubkeyHex, nostrPrivkey: privkeyHex, nostrRelayUrl: relayUrl });
+        const evt = buildProfileEvent(privkeyHex, { name: user.username, display_name: user.displayName || user.username, about: user.bio || 'Crabby Crew explorer' });
+        publishToRelay(evt, relayUrl).catch(() => {});
+        user = (await storage.getUser(user.id))!;
       }
 
       // Set session
@@ -56,7 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user online status
       await storage.updateUser(user.id, { isOnline: true, lastSeen: new Date() });
       
-      res.json({ user, message: "Login successful" });
+      res.json({ user: stripPrivkey(user), message: "Login successful" });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Login failed" });
@@ -66,17 +83,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', async (req, res) => {
     try {
       const userId = (req.session as any)?.userId;
-      
+
       if (!userId) {
         return res.status(401).json({ message: "Not authenticated" });
       }
-      
+
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
-      res.json(user);
+
+      res.json(stripPrivkey(user));
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -110,15 +127,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         return res.status(401).json({ message: "Not authenticated" });
       }
-      
+
       const validatedData = updateProfileSchema.parse(req.body);
       const updatedUser = await storage.updateProfile(userId, validatedData);
-      
+
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
-      
-      res.json(updatedUser);
+
+      // Republish updated profile to Nostr relay (fire-and-forget)
+      if (updatedUser.nostrPrivkey) {
+        const evt = buildProfileEvent(updatedUser.nostrPrivkey, {
+          name: updatedUser.username,
+          display_name: updatedUser.displayName || updatedUser.username,
+          about: updatedUser.bio || 'Crabby Crew explorer',
+        });
+        publishToRelay(evt, updatedUser.nostrRelayUrl || undefined).catch(() => {});
+      }
+
+      res.json(stripPrivkey(updatedUser));
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(400).json({ message: "Failed to update profile" });

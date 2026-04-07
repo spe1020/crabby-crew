@@ -8,6 +8,10 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   displayName: text("display_name"),
   avatarEmoji: text("avatar_emoji").default("🦀"),
+  bio: text("bio"),
+  nostrPubkey: text("nostr_pubkey"),
+  nostrPrivkey: text("nostr_privkey"),
+  nostrRelayUrl: text("nostr_relay_url"),
   isOnline: boolean("is_online").default(false),
   lastSeen: timestamp("last_seen").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -91,6 +95,7 @@ export const createUserSchema = createInsertSchema(users).pick({
 export const updateProfileSchema = createInsertSchema(users).pick({
   displayName: true,
   avatarEmoji: true,
+  bio: true,
 });
 
 export const insertGameProgressSchema = createInsertSchema(gameProgress).omit({
